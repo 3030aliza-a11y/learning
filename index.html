@@ -28,9 +28,11 @@
   .streak-badge{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.18);
     padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;}
 
+  .speak-pair{display:inline-flex;gap:6px;}
   .speak-btn{background:none;border:1px solid var(--line);color:var(--red);
     width:30px;height:30px;border-radius:50%;font-size:14px;cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;}
+  .speak-btn.slow{color:var(--gold);}
   .speak-btn:hover{background:#fdeceb;}
 
   nav{max-width:900px;margin:-40px auto 0;padding:0 12px;position:relative;z-index:2;
@@ -58,7 +60,7 @@
   .word-card .hanzi{font-size:34px;line-height:1.1;}
   .word-card .pinyin{color:var(--red);font-size:14px;margin-top:6px;font-weight:600;}
   .word-card .meaning{color:var(--muted);font-size:13px;margin-top:4px;}
-  .word-card .speak-btn{position:absolute;top:8px;left:10px;}
+  .word-card .speak-pair{position:absolute;top:8px;left:10px;}
   .star{position:absolute;top:8px;right:10px;cursor:pointer;font-size:15px;color:#ddd;}
   .star.on{color:var(--gold);}
 
@@ -80,7 +82,7 @@
   .fc-face .pinyin{color:var(--red);font-size:20px;margin-top:10px;font-weight:600;}
   .fc-face .meaning{font-size:24px;font-weight:700;color:var(--ink);}
   .fc-face .sub{color:var(--muted);font-size:14px;margin-top:8px;}
-  .fc-face .speak-btn{position:absolute;top:10px;right:10px;}
+  .fc-face .speak-pair{position:absolute;top:10px;right:10px;}
   .fc-hint{font-size:12px;color:var(--muted);}
   .fc-actions{display:flex;gap:12px;}
   .fc-actions button{padding:12px 22px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
@@ -95,11 +97,11 @@
     border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;}
   .qz-score{font-size:13px;color:var(--muted);text-align:center;margin-bottom:10px;}
   .qz-q{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px 16px;
-    text-align:center;box-shadow:var(--shadow);margin-bottom:16px;}
-  .qz-q{position:relative;}
+    text-align:center;box-shadow:var(--shadow);margin-bottom:16px;position:relative;}
   .qz-q .hanzi{font-size:56px;}
   .qz-q .pinyin{color:var(--red);font-size:16px;margin-top:8px;font-weight:600;}
-  .qz-q .speak-btn{position:absolute;top:10px;right:10px;}
+  .qz-q .pinyin-hidden-hint{color:var(--muted);font-size:15px;margin-top:8px;}
+  .qz-q .speak-pair{position:absolute;top:10px;right:10px;}
   .qz-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .qz-choices button{background:var(--card);border:1px solid var(--line);border-radius:12px;
     padding:14px 10px;font-size:15px;cursor:pointer;font-weight:600;color:var(--ink);}
@@ -110,6 +112,13 @@
     padding:10px 22px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
   .qz-result{text-align:center;padding:30px 0;}
   .qz-result .big{font-size:40px;font-weight:800;color:var(--red);}
+  .qz-review{margin-top:6px;display:flex;flex-direction:column;gap:8px;}
+  .qz-review-item{border-radius:10px;padding:10px 12px;font-size:13px;}
+  .qz-review-item.ok{background:#e8f5e9;color:var(--green);}
+  .qz-review-item.bad{background:#fdeceb;color:var(--red-dark);}
+  .qz-review-q{font-weight:700;margin-bottom:2px;}
+  .qz-review-q .hanzi{font-size:18px;margin-right:6px;}
+  .qz-review-q .pinyin{font-weight:600;}
 
   /* Writing */
   .write-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
@@ -156,6 +165,32 @@
   .convo-body .meaning{color:var(--muted);font-size:13px;margin-top:2px;}
   .convo-box.hide-meaning .pinyin, .convo-box.hide-meaning .meaning{display:none;}
 
+  /* Course path */
+  .path-list{display:flex;flex-direction:column;gap:10px;}
+  .path-card{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);cursor:pointer;}
+  .path-card.locked{opacity:.5;cursor:not-allowed;}
+  .path-card.done{border-color:var(--green);}
+  .path-num{font-size:22px;}
+  .path-title{font-weight:700;}
+  .path-sub{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .path-back{background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;
+    margin-bottom:10px;font-size:14px;padding:0;}
+  .lesson-title{font-size:18px;font-weight:800;margin-bottom:10px;}
+  .step-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+  .step-chip{font-size:12px;padding:6px 10px;border-radius:999px;background:var(--paper);
+    border:1px solid var(--line);color:var(--muted);}
+  .step-chip.current{background:var(--red);color:#fff;border-color:var(--red);font-weight:700;}
+  .step-chip.done{background:#e8f5e9;color:var(--green);border-color:var(--green);}
+  .lesson-confirm{display:block;margin:14px auto 0;background:var(--green);color:#fff;border:none;
+    padding:10px 22px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+  .lesson-nav{margin-top:20px;text-align:center;}
+  .lesson-next{background:var(--red);color:#fff;border:none;padding:12px 26px;border-radius:12px;
+    font-size:15px;font-weight:700;cursor:pointer;}
+  .lesson-next:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;}
+  .lesson-pass-note{text-align:center;color:var(--green);font-weight:700;margin-top:10px;}
+  .lesson-fail-note{text-align:center;color:var(--red-dark);font-weight:700;margin-top:10px;}
+
   footer{text-align:center;color:var(--muted);font-size:12px;padding:20px;}
 </style>
 </head>
@@ -164,21 +199,28 @@
 <header>
   <div class="streak-badge" id="streakBadge"></div>
   <h1><span class="hanzi">学中文</span>Học Tiếng Trung Cơ Bản</h1>
-  <p>Từ vựng · chữ Hán · pinyin · phát âm · hội thoại · luyện viết · trắc nghiệm</p>
+  <p>Lộ trình · từ vựng · pinyin · hội thoại · luyện viết · trắc nghiệm</p>
 </header>
 
 <nav>
-  <button data-tab="vocab" class="active">📖 Từ vựng</button>
+  <button data-tab="path" class="active">🗺️ Lộ trình</button>
+  <button data-tab="vocab">📖 Từ vựng</button>
   <button data-tab="flash">🃏 Thẻ ghi nhớ</button>
   <button data-tab="quiz">📝 Trắc nghiệm</button>
+  <button data-tab="pinyin">🔤 Pinyin</button>
   <button data-tab="convo">💬 Hội thoại</button>
   <button data-tab="write">✍️ Luyện viết</button>
 </nav>
 
 <main>
 
+  <!-- COURSE PATH -->
+  <section id="path" class="panel active">
+    <div id="pathView"></div>
+  </section>
+
   <!-- VOCAB -->
-  <section id="vocab" class="panel active">
+  <section id="vocab" class="panel">
     <div class="cats" id="vocabCats"></div>
     <div class="hint">Nhấn ★ để đánh dấu từ đã thuộc</div>
     <div class="grid" id="vocabGrid"></div>
@@ -193,12 +235,18 @@
       <div class="flashcard" id="fcCard">
         <div class="flashcard-inner">
           <div class="fc-face front">
-            <button class="speak-btn" id="fcSpeakFront">🔊</button>
+            <span class="speak-pair">
+              <button class="speak-btn" id="fcSpeakFront">🔊</button>
+              <button class="speak-btn slow" id="fcSpeakFrontSlow" title="Đọc chậm">🐢</button>
+            </span>
             <div class="hanzi" id="fcHanzi"></div>
             <div class="fc-hint">Nhấn để xem nghĩa</div>
           </div>
           <div class="fc-face back">
-            <button class="speak-btn" id="fcSpeakBack">🔊</button>
+            <span class="speak-pair">
+              <button class="speak-btn" id="fcSpeakBack">🔊</button>
+              <button class="speak-btn slow" id="fcSpeakBackSlow" title="Đọc chậm">🐢</button>
+            </span>
             <div class="meaning" id="fcMeaning"></div>
             <div class="pinyin" id="fcPinyin"></div>
             <div class="sub" id="fcHanziSmall"></div>
@@ -218,6 +266,13 @@
   <section id="quiz" class="panel">
     <div class="cats" id="quizCats"></div>
     <div id="quizArea"></div>
+  </section>
+
+  <!-- PINYIN -->
+  <section id="pinyin" class="panel">
+    <div class="cats" id="pinyinCats"></div>
+    <div class="hint">Nghe/xem chữ Hán và nghĩa, chọn đúng cách đọc (pinyin)</div>
+    <div id="pinyinArea"></div>
   </section>
 
   <!-- CONVERSATION -->
@@ -240,7 +295,10 @@
     <div class="hint">Bấm "Xem thứ tự nét" để xem cách viết, rồi bấm "Kiểm tra viết" để tự viết và được chấm điểm</div>
     <div class="write-wrap">
       <div class="write-info">
-        <button class="speak-btn" id="wSpeak">🔊</button>
+        <span class="speak-pair">
+          <button class="speak-btn" id="wSpeak">🔊</button>
+          <button class="speak-btn slow" id="wSpeakSlow" title="Đọc chậm">🐢</button>
+        </span>
         <div>
           <div class="pinyin" id="wPinyin"></div>
           <div class="meaning" id="wMeaning"></div>
@@ -262,13 +320,37 @@
 
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.3/dist/hanzi-writer.min.js"></script>
 <script>
-function speak(text){
+let zhVoice = null;
+function pickZhVoice(){
+  if(!("speechSynthesis" in window)) return;
+  const voices = speechSynthesis.getVoices();
+  zhVoice = voices.find(v=>v.lang === "zh-CN") || voices.find(v=>v.lang && v.lang.startsWith("zh")) || null;
+}
+if("speechSynthesis" in window){
+  pickZhVoice();
+  speechSynthesis.onvoiceschanged = pickZhVoice;
+}
+function speak(text, rate){
   if(!("speechSynthesis" in window)) return;
   speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = "zh-CN";
-  utter.rate = 0.8;
+  if(zhVoice) utter.voice = zhVoice;
+  utter.rate = rate || 0.72;
+  utter.pitch = 1;
   speechSynthesis.speak(utter);
+}
+function speakPairMarkup(){
+  return `<span class="speak-pair">
+    <button class="speak-btn fast">🔊</button>
+    <button class="speak-btn slow" title="Đọc chậm">🐢</button>
+  </span>`;
+}
+function wireSpeakPair(el, text){
+  const fast = el.querySelector(".fast");
+  const slow = el.querySelector(".slow");
+  if(fast) fast.addEventListener("click", (e)=>{ e.stopPropagation(); speak(text, 0.72); });
+  if(slow) slow.addEventListener("click", (e)=>{ e.stopPropagation(); speak(text, 0.4); });
 }
 
 function localDateStr(d){
@@ -483,6 +565,23 @@ const STROKE_RULES = [
   {n:"Vào trong trước, đóng khung sau", cn:"先里头后封口", ex:"国"},
 ];
 
+const LESSONS = [
+  {cat:"Số đếm", dialogueTitle:null},
+  {cat:"Chào hỏi", dialogueTitle:"Chào hỏi"},
+  {cat:"Đại từ", dialogueTitle:"Hỏi tên"},
+  {cat:"Gia đình", dialogueTitle:"Gia đình"},
+  {cat:"Thời gian", dialogueTitle:"Hỏi giờ"},
+  {cat:"Màu sắc", dialogueTitle:null},
+  {cat:"Ăn uống", dialogueTitle:"Gọi món"},
+  {cat:"Đồ vật & nơi chốn", dialogueTitle:"Mua hàng"},
+  {cat:"Động từ", dialogueTitle:"Bạn từ đâu đến"},
+  {cat:"Tính từ", dialogueTitle:"Tạm biệt"},
+].map((l,i)=>({
+  ...l, id:i, title:l.cat,
+  steps:["vocab","flash","quiz","pinyin", ...(l.dialogueTitle ? ["convo"] : []), "write"]
+}));
+const STEP_LABELS = {vocab:"📖 Từ vựng", flash:"🃏 Ghi nhớ", quiz:"📝 Trắc nghiệm", pinyin:"🔤 Pinyin", convo:"💬 Hội thoại", write:"✍️ Luyện viết"};
+
 const CATS = [...new Set(VOCAB.map(w=>w.cat))];
 const ALL_LABEL = "Tất cả";
 
@@ -493,6 +592,21 @@ const store = {
   isKnown(id){ return !!this.get()[id]; },
   setKnown(id, val){ const o=this.get(); if(val) o[id]=true; else delete o[id]; this.set(o); }
 };
+const lessonStore = {
+  key:"hoctiengtrung_lessons_v1",
+  get(){ try{return JSON.parse(localStorage.getItem(this.key))||{};}catch(e){return {};} },
+  set(o){ localStorage.setItem(this.key, JSON.stringify(o)); },
+  stepDone(id, step){ const o=this.get(); return !!(o[id] && o[id][step]); },
+  setStepDone(id, step){ const o=this.get(); if(!o[id]) o[id]={}; o[id][step]=true; this.set(o); },
+  isLessonComplete(lesson){ return lesson.steps.every(s=>this.stepDone(lesson.id, s)); }
+};
+const charsDoneStore = {
+  key:"hoctiengtrung_chars_done_v1",
+  get(){ try{return JSON.parse(localStorage.getItem(this.key))||{};}catch(e){return {};} },
+  set(o){ localStorage.setItem(this.key, JSON.stringify(o)); },
+  isDone(ch){ return !!this.get()[ch]; },
+  markDone(ch){ const o=this.get(); o[ch]=true; this.set(o); }
+};
 
 // ---- Tabs ----
 document.querySelectorAll("nav button").forEach(btn=>{
@@ -501,6 +615,7 @@ document.querySelectorAll("nav button").forEach(btn=>{
     document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
+    if(btn.dataset.tab === "path") renderPathMap();
   });
 });
 
@@ -523,17 +638,18 @@ function buildCatButtons(container, onChange, includeAll=true){
   return { get:()=>current };
 }
 function wordsFor(cat){ return cat===ALL_LABEL ? VOCAB : VOCAB.filter(w=>w.cat===cat); }
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
 
 // ---- VOCAB TAB ----
-const vocabGrid = document.getElementById("vocabGrid");
-function renderVocab(cat){
-  vocabGrid.innerHTML = "";
-  wordsFor(cat).forEach(w=>{
+function renderVocabCards(container, words){
+  container.innerHTML = "";
+  container.classList.add("grid");
+  words.forEach(w=>{
     const card = document.createElement("div");
     card.className = "word-card";
     const known = store.isKnown(w.id);
     card.innerHTML = `
-      <button class="speak-btn">🔊</button>
+      ${speakPairMarkup()}
       <span class="star ${known?"on":""}" data-id="${w.id}">★</span>
       <div class="hanzi">${w.c}</div>
       <div class="pinyin">${w.p}</div>
@@ -543,10 +659,12 @@ function renderVocab(cat){
       store.setKnown(w.id, nowKnown);
       e.target.classList.toggle("on", nowKnown);
     });
-    card.querySelector(".speak-btn").addEventListener("click", ()=> speak(w.c));
-    vocabGrid.appendChild(card);
+    wireSpeakPair(card, w.c);
+    container.appendChild(card);
   });
 }
+const vocabGrid = document.getElementById("vocabGrid");
+function renderVocab(cat){ renderVocabCards(vocabGrid, wordsFor(cat)); }
 buildCatButtons(document.getElementById("vocabCats"), renderVocab);
 renderVocab(ALL_LABEL);
 
@@ -586,14 +704,10 @@ function nextFlash(total){
   document.getElementById("fcHanziSmall").textContent = fcCurrent.c;
 }
 fcCardEl.addEventListener("click", ()=> fcCardEl.classList.toggle("flipped"));
-document.getElementById("fcSpeakFront").addEventListener("click", (e)=>{
-  e.stopPropagation();
-  if(fcCurrent) speak(fcCurrent.c);
-});
-document.getElementById("fcSpeakBack").addEventListener("click", (e)=>{
-  e.stopPropagation();
-  if(fcCurrent) speak(fcCurrent.c);
-});
+document.getElementById("fcSpeakFront").addEventListener("click", (e)=>{ e.stopPropagation(); if(fcCurrent) speak(fcCurrent.c, 0.72); });
+document.getElementById("fcSpeakFrontSlow").addEventListener("click", (e)=>{ e.stopPropagation(); if(fcCurrent) speak(fcCurrent.c, 0.4); });
+document.getElementById("fcSpeakBack").addEventListener("click", (e)=>{ e.stopPropagation(); if(fcCurrent) speak(fcCurrent.c, 0.72); });
+document.getElementById("fcSpeakBackSlow").addEventListener("click", (e)=>{ e.stopPropagation(); if(fcCurrent) speak(fcCurrent.c, 0.4); });
 document.getElementById("fcYes").addEventListener("click", ()=>{
   if(!fcCurrent) return;
   store.setKnown(fcCurrent.id, true);
@@ -614,76 +728,171 @@ document.getElementById("fcReset").addEventListener("click", ()=>{
 const fcCatState = buildCatButtons(document.getElementById("flashCats"), startFlash);
 startFlash(ALL_LABEL);
 
-// ---- QUIZ TAB ----
+// ---- Reusable mini flashcards (used by lesson steps) ----
+function runFlashcards(container, words, opts){
+  opts = opts || {};
+  let queue = words.filter(w=>!store.isKnown(w.id));
+  let current = null;
+  function render(){
+    const known = words.filter(w=>store.isKnown(w.id)).length;
+    if(queue.length === 0){
+      container.innerHTML = `<div class="fc-done">🎉 Đã ôn hết! (${known}/${words.length} đã thuộc)</div>`;
+      if(known === words.length && opts.onAllKnown) opts.onAllKnown();
+      return;
+    }
+    current = queue[Math.floor(Math.random()*queue.length)];
+    container.innerHTML = `
+      <div class="fc-counter">Đã thuộc: ${known}/${words.length}</div>
+      <div class="flashcard" id="miniFc">
+        <div class="flashcard-inner">
+          <div class="fc-face front">${speakPairMarkup()}
+            <div class="hanzi">${current.c}</div>
+            <div class="fc-hint">Nhấn để xem nghĩa</div>
+          </div>
+          <div class="fc-face back">${speakPairMarkup()}
+            <div class="meaning">${current.m}</div>
+            <div class="pinyin">${current.p}</div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-actions">
+        <button class="btn-no" id="miniNo">✗ Chưa thuộc</button>
+        <button class="btn-yes" id="miniYes">✓ Đã thuộc</button>
+      </div>`;
+    const fcEl = document.getElementById("miniFc");
+    fcEl.addEventListener("click", ()=> fcEl.classList.toggle("flipped"));
+    fcEl.querySelectorAll(".fc-face").forEach(face=> wireSpeakPair(face, current.c));
+    document.getElementById("miniYes").addEventListener("click", ()=>{
+      store.setKnown(current.id, true);
+      queue = queue.filter(w=>w.id!==current.id);
+      render();
+    });
+    document.getElementById("miniNo").addEventListener("click", ()=>{
+      store.setKnown(current.id, false);
+      render();
+    });
+  }
+  render();
+}
+
+// ---- Reusable quiz (meaning or pinyin mode) with answer review ----
+function runQuiz(container, words, opts){
+  opts = opts || {};
+  const limit = opts.limit || Math.min(10, words.length);
+  const mode = opts.mode || "meaning";
+  const onFinish = opts.onFinish || function(){};
+  let order = shuffle(words).slice(0, limit);
+  let index = 0, score = 0, answers = [];
+
+  function answerText(w){ return mode === "pinyin" ? w.p : w.m; }
+
+  function renderQuestion(){
+    if(index >= order.length){ renderResult(); return; }
+    const word = order[index];
+    const distractors = shuffle(words.filter(w=>w.id!==word.id)).slice(0,3);
+    const choices = shuffle([word, ...distractors]);
+    const questionExtra = mode === "pinyin"
+      ? `<div class="pinyin-hidden-hint">${word.m}</div>`
+      : `<div class="pinyin">${word.p}</div>`;
+    container.innerHTML = `
+      <div class="qz-score">Câu ${index+1}/${order.length} · Điểm: ${score}</div>
+      <div class="qz-q">
+        ${speakPairMarkup()}
+        <div class="hanzi">${word.c}</div>
+        ${questionExtra}
+      </div>
+      <div class="qz-choices" id="qzChoices"></div>`;
+    wireSpeakPair(container.querySelector(".qz-q"), word.c);
+    const choicesEl = container.querySelector("#qzChoices");
+    choices.forEach(ch=>{
+      const b = document.createElement("button");
+      b.textContent = answerText(ch);
+      b.addEventListener("click", ()=>{
+        const buttons = choicesEl.querySelectorAll("button");
+        buttons.forEach(x=>x.disabled = true);
+        const correct = ch.id === word.id;
+        if(correct){ b.classList.add("correct"); score++; }
+        else {
+          b.classList.add("wrong");
+          buttons.forEach(x=>{ if(x.textContent===answerText(word)) x.classList.add("correct"); });
+        }
+        answers.push({word, chosenText: answerText(ch), correct});
+        const next = document.createElement("button");
+        next.className = "qz-next";
+        next.textContent = index+1 < order.length ? "Câu tiếp theo →" : "Xem kết quả →";
+        next.addEventListener("click", ()=>{ index++; renderQuestion(); });
+        container.appendChild(next);
+      });
+      choicesEl.appendChild(b);
+    });
+  }
+
+  function renderResult(){
+    const pct = order.length ? Math.round(score/order.length*100) : 0;
+    const reviewHtml = answers.map(a=>`
+      <div class="qz-review-item ${a.correct?"ok":"bad"}">
+        <div class="qz-review-q"><span class="hanzi">${a.word.c}</span> <span class="pinyin">${a.word.p}</span> — ${a.word.m}</div>
+        <div class="qz-review-a">${a.correct ? "✓ Đúng" : "✗ Bạn chọn: "+a.chosenText+" — Đáp án đúng: "+answerText(a.word)}</div>
+      </div>`).join("");
+    container.innerHTML = `
+      <div class="qz-result">
+        <div>Kết quả của bạn</div>
+        <div class="big">${score}/${order.length}</div>
+        <div class="qz-restart-wrap"></div>
+      </div>
+      <div class="qz-review">${reviewHtml}</div>`;
+    const restartBtn = document.createElement("button");
+    restartBtn.className = "qz-restart";
+    restartBtn.textContent = "Làm lại";
+    restartBtn.addEventListener("click", ()=>{
+      index = 0; score = 0; answers = [];
+      order = shuffle(words).slice(0, limit);
+      renderQuestion();
+    });
+    container.querySelector(".qz-restart-wrap").appendChild(restartBtn);
+    onFinish({score, total: order.length, pct, answers});
+  }
+
+  renderQuestion();
+}
+
+// ---- QUIZ TAB (meaning) ----
 const quizArea = document.getElementById("quizArea");
-let quizWords = [], quizIndex = 0, quizScore = 0, quizOrder = [];
-
-function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
-
 function startQuiz(cat){
   const words = wordsFor(cat);
   if(words.length < 4){
     quizArea.innerHTML = `<div class="quiz-start">Chủ đề này cần ít nhất 4 từ để làm trắc nghiệm.</div>`;
     return;
   }
-  quizWords = words;
   quizArea.innerHTML = `<div class="quiz-start">
     <div>Sẵn sàng kiểm tra <b>${words.length}</b> từ chủ đề "<b>${cat}</b>"?</div>
     <button id="quizGo">Bắt đầu trắc nghiệm</button>
   </div>`;
   document.getElementById("quizGo").addEventListener("click", ()=>{
-    quizOrder = shuffle(words).slice(0, Math.min(10, words.length));
-    quizIndex = 0; quizScore = 0;
-    renderQuizQuestion();
-  });
-}
-function renderQuizQuestion(){
-  if(quizIndex >= quizOrder.length){
-    quizArea.innerHTML = `<div class="qz-result">
-      <div>Kết quả của bạn</div>
-      <div class="big">${quizScore}/${quizOrder.length}</div>
-      <button class="qz-restart" id="qzRestart">Làm lại</button>
-    </div>`;
-    document.getElementById("qzRestart").addEventListener("click", ()=>startQuiz(quizCatState.get()));
-    return;
-  }
-  const word = quizOrder[quizIndex];
-  const distractors = shuffle(quizWords.filter(w=>w.id!==word.id)).slice(0,3);
-  const choices = shuffle([word, ...distractors]);
-  quizArea.innerHTML = `
-    <div class="qz-score">Câu ${quizIndex+1}/${quizOrder.length} · Điểm: ${quizScore}</div>
-    <div class="qz-q">
-      <button class="speak-btn" id="qzSpeak">🔊</button>
-      <div class="hanzi">${word.c}</div>
-      <div class="pinyin">${word.p}</div>
-    </div>
-    <div class="qz-choices" id="qzChoices"></div>`;
-  document.getElementById("qzSpeak").addEventListener("click", ()=> speak(word.c));
-  const choicesEl = document.getElementById("qzChoices");
-  choices.forEach(ch=>{
-    const b = document.createElement("button");
-    b.textContent = ch.m;
-    b.addEventListener("click", ()=>{
-      const buttons = choicesEl.querySelectorAll("button");
-      buttons.forEach(x=>x.disabled = true);
-      if(ch.id === word.id){
-        b.classList.add("correct");
-        quizScore++;
-      } else {
-        b.classList.add("wrong");
-        buttons.forEach(x=>{ if(x.textContent===word.m) x.classList.add("correct"); });
-      }
-      const next = document.createElement("button");
-      next.className = "qz-next";
-      next.textContent = quizIndex+1 < quizOrder.length ? "Câu tiếp theo →" : "Xem kết quả →";
-      next.addEventListener("click", ()=>{ quizIndex++; renderQuizQuestion(); });
-      quizArea.appendChild(next);
-    });
-    choicesEl.appendChild(b);
+    runQuiz(quizArea, words, {limit: Math.min(10, words.length)});
   });
 }
 const quizCatState = buildCatButtons(document.getElementById("quizCats"), startQuiz);
 startQuiz(ALL_LABEL);
+
+// ---- PINYIN TAB ----
+const pinyinArea = document.getElementById("pinyinArea");
+function startPinyinPractice(cat){
+  const words = wordsFor(cat);
+  if(words.length < 4){
+    pinyinArea.innerHTML = `<div class="quiz-start">Chủ đề này cần ít nhất 4 từ để luyện pinyin.</div>`;
+    return;
+  }
+  pinyinArea.innerHTML = `<div class="quiz-start">
+    <div>Chọn đúng <b>pinyin</b> cho <b>${words.length}</b> từ chủ đề "<b>${cat}</b>"?</div>
+    <button id="pinyinGo">Bắt đầu luyện pinyin</button>
+  </div>`;
+  document.getElementById("pinyinGo").addEventListener("click", ()=>{
+    runQuiz(pinyinArea, words, {limit: Math.min(10, words.length), mode:"pinyin"});
+  });
+}
+const pinyinCatState = buildCatButtons(document.getElementById("pinyinCats"), startPinyinPractice);
+startPinyinPractice(ALL_LABEL);
 
 // ---- WRITING TAB (HanziWriter: stroke order + graded quiz) ----
 let writeWords = [], writeIdx = 0, writers = [];
@@ -713,6 +922,7 @@ function buildCharWriters(word){
       outlineColor: "#eadfcd",
       drawingWidth: 24
     });
+    writer.__char = ch;
     writers.push(writer);
   });
 }
@@ -731,10 +941,8 @@ function showWriteWord(){
   wFeedback.textContent = "";
   buildCharWriters(w);
 }
-document.getElementById("wSpeak").addEventListener("click", ()=>{
-  const w = writeWords[writeIdx];
-  if(w) speak(w.c);
-});
+document.getElementById("wSpeak").addEventListener("click", ()=>{ const w = writeWords[writeIdx]; if(w) speak(w.c, 0.72); });
+document.getElementById("wSpeakSlow").addEventListener("click", ()=>{ const w = writeWords[writeIdx]; if(w) speak(w.c, 0.4); });
 document.getElementById("wAnimate").addEventListener("click", ()=>{
   writers.forEach((writer, i)=> setTimeout(()=> writer.animateCharacter(), i*1300));
 });
@@ -749,6 +957,7 @@ document.getElementById("wQuiz").addEventListener("click", ()=>{
     }
     writers[idx].quiz({
       onComplete: (summary)=>{
+        charsDoneStore.markDone(writers[idx].__char);
         idx++;
         if(idx < writers.length){
           wFeedback.textContent = `Đúng! (sai ${summary.totalMistakes} lần) — viết tiếp ô ${idx+1}/${writers.length}...`;
@@ -789,9 +998,7 @@ renderRules();
 
 // ---- CONVERSATION TAB ----
 let currentDialogue = null;
-function renderDialogue(dialogue){
-  currentDialogue = dialogue;
-  const box = document.getElementById("convoBox");
+function renderDialogueInto(box, dialogue){
   box.innerHTML = "";
   dialogue.lines.forEach(line=>{
     const div = document.createElement("div");
@@ -799,16 +1006,20 @@ function renderDialogue(dialogue){
     div.innerHTML = `
       <div class="who">${line.who}</div>
       <div class="convo-body">
-        <button class="speak-btn">🔊</button>
+        ${speakPairMarkup()}
         <div>
           <div class="hanzi">${line.c}</div>
           <div class="pinyin">${line.p}</div>
           <div class="meaning">${line.m}</div>
         </div>
       </div>`;
-    div.querySelector(".speak-btn").addEventListener("click", ()=> speak(line.c));
+    wireSpeakPair(div.querySelector(".convo-body"), line.c);
     box.appendChild(div);
   });
+}
+function renderDialogue(dialogue){
+  currentDialogue = dialogue;
+  renderDialogueInto(document.getElementById("convoBox"), dialogue);
 }
 function startConvo(){
   const container = document.getElementById("convoCats");
@@ -840,13 +1051,214 @@ document.getElementById("convoPlayAll").addEventListener("click", ()=>{
     if(i >= texts.length) return;
     lineEls[i].classList.add("playing");
     const utter = new SpeechSynthesisUtterance(texts[i]);
-    utter.lang = "zh-CN"; utter.rate = 0.8;
+    utter.lang = "zh-CN";
+    if(zhVoice) utter.voice = zhVoice;
+    utter.rate = 0.72;
     utter.onend = ()=>{ i++; next(); };
     speechSynthesis.speak(utter);
   }
   next();
 });
 startConvo();
+
+// ---- COURSE PATH (sequential lessons) ----
+const pathView = document.getElementById("pathView");
+let currentLesson = null, currentStepIdx = 0;
+
+function isLessonUnlocked(i){
+  if(i===0) return true;
+  return lessonStore.isLessonComplete(LESSONS[i-1]);
+}
+function renderPathMap(){
+  pathView.innerHTML = `<div class="hint">Học lần lượt từng bài — hoàn tất bài trước để mở bài tiếp theo.</div><div class="path-list"></div>`;
+  const list = pathView.querySelector(".path-list");
+  LESSONS.forEach((lesson, i)=>{
+    const unlocked = isLessonUnlocked(i);
+    const complete = lessonStore.isLessonComplete(lesson);
+    const doneSteps = lesson.steps.filter(s=>lessonStore.stepDone(lesson.id,s)).length;
+    const card = document.createElement("div");
+    card.className = "path-card" + (complete?" done":"") + (!unlocked?" locked":"");
+    card.innerHTML = `
+      <div class="path-num">${complete?"✅":(unlocked?"🔵":"🔒")}</div>
+      <div class="path-info">
+        <div class="path-title">Bài ${i+1}: ${lesson.title}</div>
+        <div class="path-sub">${doneSteps}/${lesson.steps.length} bước${complete?" · Hoàn thành":""}</div>
+      </div>`;
+    if(unlocked) card.addEventListener("click", ()=> openLesson(lesson));
+    list.appendChild(card);
+  });
+}
+function openLesson(lesson){
+  currentLesson = lesson;
+  const firstIncomplete = lesson.steps.findIndex(s=>!lessonStore.stepDone(lesson.id,s));
+  currentStepIdx = firstIncomplete === -1 ? 0 : firstIncomplete;
+  renderLessonStep();
+}
+function renderLessonStep(){
+  const lesson = currentLesson;
+  const step = lesson.steps[currentStepIdx];
+  const chips = lesson.steps.map((s,i)=>{
+    const done = lessonStore.stepDone(lesson.id, s);
+    const cls = i===currentStepIdx ? "current" : (done ? "done" : "");
+    return `<div class="step-chip ${cls}">${STEP_LABELS[s]}</div>`;
+  }).join("");
+  pathView.innerHTML = `
+    <button class="path-back" id="pathBack">← Lộ trình</button>
+    <div class="lesson-title">Bài ${lesson.id+1}: ${lesson.title}</div>
+    <div class="step-chips">${chips}</div>
+    <div id="stepContent"></div>
+    <div class="lesson-nav"><button id="lessonNextBtn" class="lesson-next" disabled>Hoàn tất bước này để tiếp tục</button></div>`;
+  document.getElementById("pathBack").addEventListener("click", renderPathMap);
+  if(lessonStore.stepDone(lesson.id, step)){
+    const nextBtn = document.getElementById("lessonNextBtn");
+    nextBtn.disabled = false;
+    nextBtn.textContent = currentStepIdx+1 < lesson.steps.length ? "Tiếp theo →" : "🎉 Hoàn thành bài học";
+    nextBtn.onclick = advanceLesson;
+  }
+  renderStepContent(step);
+}
+function advanceLesson(){
+  if(currentStepIdx+1 < currentLesson.steps.length){
+    currentStepIdx++;
+    renderLessonStep();
+  } else {
+    renderPathMap();
+  }
+}
+function markStepDoneAndAdvance(){
+  lessonStore.setStepDone(currentLesson.id, currentLesson.steps[currentStepIdx]);
+  const nextBtn = document.getElementById("lessonNextBtn");
+  if(!nextBtn) return;
+  nextBtn.disabled = false;
+  nextBtn.textContent = currentStepIdx+1 < currentLesson.steps.length ? "Tiếp theo →" : "🎉 Hoàn thành bài học";
+  nextBtn.onclick = advanceLesson;
+}
+function renderStepContent(step){
+  const container = document.getElementById("stepContent");
+  const words = wordsFor(currentLesson.cat);
+  if(step === "vocab") renderVocabStep(container, words);
+  else if(step === "flash") renderFlashStep(container, words);
+  else if(step === "quiz") renderQuizStep(container, words);
+  else if(step === "pinyin") renderPinyinStep(container, words);
+  else if(step === "convo") renderConvoStep(container, currentLesson.dialogueTitle);
+  else if(step === "write") renderWriteStep(container, words);
+}
+function renderVocabStep(container, words){
+  container.innerHTML = `<div class="hint">Xem qua hết các từ bên dưới rồi bấm nút hoàn tất.</div><div id="lessonVocabGrid"></div><button class="lesson-confirm" id="vocabDoneBtn">Tôi đã xem xong ✓</button>`;
+  renderVocabCards(document.getElementById("lessonVocabGrid"), words);
+  document.getElementById("vocabDoneBtn").addEventListener("click", markStepDoneAndAdvance);
+}
+function renderFlashStep(container, words){
+  container.innerHTML = `<div class="hint">Ôn đến khi tất cả từ được đánh dấu "Đã thuộc".</div><div id="lessonFlashArea"></div>`;
+  runFlashcards(document.getElementById("lessonFlashArea"), words, {
+    onAllKnown: ()=>{ if(!lessonStore.stepDone(currentLesson.id,"flash")) markStepDoneAndAdvance(); }
+  });
+}
+function renderQuizStep(container, words){
+  if(words.length < 4){
+    container.innerHTML = `<div class="quiz-start">Chủ đề này chưa đủ từ để làm trắc nghiệm.</div><button class="lesson-confirm" id="quizSkip">Bỏ qua bước này ✓</button>`;
+    document.getElementById("quizSkip").addEventListener("click", markStepDoneAndAdvance);
+    return;
+  }
+  container.innerHTML = `<div class="quiz-start"><div>Làm đúng từ <b>80%</b> trở lên để qua bước này.</div><button id="lessonQuizGo">Bắt đầu trắc nghiệm</button></div>`;
+  document.getElementById("lessonQuizGo").addEventListener("click", ()=>{
+    runQuiz(container, words, {
+      limit: Math.min(10, words.length),
+      onFinish: (result)=>{
+        const note = document.createElement("div");
+        if(result.pct >= 80){
+          note.className = "lesson-pass-note";
+          note.textContent = "✓ Đạt yêu cầu! Bấm 'Tiếp theo' bên dưới để qua bước kế.";
+          container.appendChild(note);
+          markStepDoneAndAdvance();
+        } else {
+          note.className = "lesson-fail-note";
+          note.textContent = "Chưa đạt 80%, hãy bấm 'Làm lại' ở trên để thử lại.";
+          container.appendChild(note);
+        }
+      }
+    });
+  });
+}
+function renderPinyinStep(container, words){
+  if(words.length < 4){
+    container.innerHTML = `<div class="quiz-start">Chủ đề này chưa đủ từ để luyện pinyin.</div><button class="lesson-confirm" id="pinyinSkip">Bỏ qua bước này ✓</button>`;
+    document.getElementById("pinyinSkip").addEventListener("click", markStepDoneAndAdvance);
+    return;
+  }
+  container.innerHTML = `<div class="quiz-start"><div>Chọn đúng <b>pinyin</b> — làm đúng từ <b>80%</b> trở lên để qua bước này.</div><button id="lessonPinyinGo">Bắt đầu</button></div>`;
+  document.getElementById("lessonPinyinGo").addEventListener("click", ()=>{
+    runQuiz(container, words, {
+      limit: Math.min(10, words.length),
+      mode: "pinyin",
+      onFinish: (result)=>{
+        const note = document.createElement("div");
+        if(result.pct >= 80){
+          note.className = "lesson-pass-note";
+          note.textContent = "✓ Đạt yêu cầu! Bấm 'Tiếp theo' bên dưới để qua bước kế.";
+          container.appendChild(note);
+          markStepDoneAndAdvance();
+        } else {
+          note.className = "lesson-fail-note";
+          note.textContent = "Chưa đạt 80%, hãy bấm 'Làm lại' ở trên để thử lại.";
+          container.appendChild(note);
+        }
+      }
+    });
+  });
+}
+function renderConvoStep(container, dialogueTitle){
+  const dialogue = DIALOGUES.find(d=>d.title===dialogueTitle);
+  container.innerHTML = `<div class="hint">Nghe và đọc theo hội thoại bên dưới.</div><div class="convo-box" id="lessonConvoBox"></div><button class="lesson-confirm" id="convoDoneBtn">Tôi đã luyện xong hội thoại ✓</button>`;
+  renderDialogueInto(document.getElementById("lessonConvoBox"), dialogue);
+  document.getElementById("convoDoneBtn").addEventListener("click", markStepDoneAndAdvance);
+}
+function renderWriteStep(container, words){
+  const chars = [...new Set(words.flatMap(w=>Array.from(w.c)).filter(ch=>/[㐀-鿿]/.test(ch)))];
+  let idx = chars.findIndex(ch=>!charsDoneStore.isDone(ch));
+  if(idx === -1) idx = 0;
+
+  function renderChar(){
+    const remaining = chars.filter(ch=>!charsDoneStore.isDone(ch)).length;
+    container.innerHTML = `
+      <div class="hint">Còn ${remaining}/${chars.length} chữ cần luyện viết đúng.</div>
+      <div class="char-writers"><div class="tian" id="lessonCharTarget"></div></div>
+      <div class="write-feedback" id="lessonWriteFeedback"></div>
+      <div class="write-actions">
+        <button class="btn-clear" id="lessonAnimateBtn">▶ Xem thứ tự nét</button>
+        <button class="btn-clear" id="lessonQuizBtn">✏️ Kiểm tra viết</button>
+      </div>`;
+    const writer = HanziWriter.create("lessonCharTarget", chars[idx], {
+      width:150, height:150, padding:5, showOutline:true, showCharacter:false,
+      strokeAnimationSpeed:1, delayBetweenStrokes:300,
+      strokeColor:"#a8232a", outlineColor:"#eadfcd"
+    });
+    document.getElementById("lessonAnimateBtn").addEventListener("click", ()=> writer.animateCharacter());
+    document.getElementById("lessonQuizBtn").addEventListener("click", ()=>{
+      document.getElementById("lessonWriteFeedback").textContent = "Hãy viết chữ vào ô...";
+      writer.quiz({
+        onComplete: (summary)=>{
+          charsDoneStore.markDone(chars[idx]);
+          idx++;
+          if(idx >= chars.length){
+            document.getElementById("lessonWriteFeedback").textContent = "🎉 Đã viết đúng hết! Bấm 'Tiếp theo' bên dưới.";
+            markStepDoneAndAdvance();
+          } else {
+            document.getElementById("lessonWriteFeedback").textContent = `Đúng! (sai ${summary.totalMistakes} lần) — sang chữ tiếp theo...`;
+            setTimeout(renderChar, 700);
+          }
+        }
+      });
+    });
+  }
+  if(chars.length === 0){
+    markStepDoneAndAdvance();
+    return;
+  }
+  renderChar();
+}
+
+renderPathMap();
 </script>
 </body>
 </html>

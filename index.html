@@ -165,6 +165,39 @@
   .convo-body .meaning{color:var(--muted);font-size:13px;margin-top:2px;}
   .convo-box.hide-meaning .pinyin, .convo-box.hide-meaning .meaning{display:none;}
 
+  /* Pinyin fundamentals */
+  .pinyin-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+  .tone-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;
+    box-shadow:var(--shadow);position:relative;}
+  .tone-card .speak-pair{position:absolute;top:10px;right:10px;}
+  .tone-label{font-weight:700;margin-bottom:6px;}
+  .tone-mark{color:var(--red);font-size:20px;}
+  .tone-example{font-size:22px;margin-bottom:4px;}
+  .tone-example .pinyin{color:var(--red);font-weight:600;margin-left:6px;}
+  .tone-meaning{color:var(--muted);font-size:12.5px;margin-bottom:6px;}
+  .tone-desc{font-size:12px;color:var(--ink);}
+  .sound-group{margin-bottom:16px;}
+  .sound-group-title{font-weight:700;color:var(--red-dark);margin-bottom:8px;font-size:14px;}
+  .sound-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+  .sound-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;
+    position:relative;text-align:center;}
+  .sound-item .speak-pair{position:absolute;top:6px;right:6px;}
+  .sound-s{font-size:20px;font-weight:800;color:var(--gold);}
+  .sound-ex{font-size:16px;margin-top:4px;}
+  .sound-ex .pinyin{color:var(--red);font-size:13px;margin-left:4px;}
+  .sound-meaning{font-size:11px;color:var(--muted);margin-top:2px;}
+  .spelling-rule-card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);}
+  .spelling-rule-title{font-weight:700;margin-bottom:4px;}
+  .spelling-rule-ex{color:var(--muted);font-size:13px;}
+  .pinyin-intro{text-align:left;line-height:1.7;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);}
+  .pinyin-intro b{color:var(--red-dark);}
+  .pinyin-intro .warn{background:#fdf3e0;border:1px solid #f0dca8;border-radius:10px;padding:10px 12px;
+    margin-top:10px;font-size:13.5px;}
+  .audio-listen-btn{background:var(--gold);color:#fff;border:none;padding:10px 20px;border-radius:10px;
+    font-size:14px;font-weight:700;cursor:pointer;}
+
   /* Course path */
   .path-list{display:flex;flex-direction:column;gap:10px;}
   .path-card{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);
@@ -270,9 +303,8 @@
 
   <!-- PINYIN -->
   <section id="pinyin" class="panel">
-    <div class="cats" id="pinyinCats"></div>
-    <div class="hint">Nghe/xem chữ Hán và nghĩa, chọn đúng cách đọc (pinyin)</div>
-    <div id="pinyinArea"></div>
+    <div class="cats" id="pinyinSubNav"></div>
+    <div id="pinyinContent"></div>
   </section>
 
   <!-- CONVERSATION -->
@@ -565,7 +597,93 @@ const STROKE_RULES = [
   {n:"Vào trong trước, đóng khung sau", cn:"先里头后封口", ex:"国"},
 ];
 
+const TONES = [
+  {num:1, mark:"ā", label:"Thanh 1", desc:"Thanh ngang – giữ đều, cao và phẳng, ngân dài như hát một nốt.", hanzi:"妈", pinyin:"mā", meaning:"mẹ"},
+  {num:2, mark:"á", label:"Thanh 2", desc:"Thanh lên – bắt đầu ở mức vừa rồi đi lên cao, giống giọng hỏi lại \"hả?\".", hanzi:"麻", pinyin:"má", meaning:"cây gai, tê rần"},
+  {num:3, mark:"ǎ", label:"Thanh 3", desc:"Thanh xuống rồi lên – hạ giọng thấp xuống rồi nhấc nhẹ lên ở cuối.", hanzi:"马", pinyin:"mǎ", meaning:"con ngựa"},
+  {num:4, mark:"à", label:"Thanh 4", desc:"Thanh xuống mạnh – từ cao rơi xuống thấp thật nhanh, dứt khoát như đang ra lệnh.", hanzi:"骂", pinyin:"mà", meaning:"mắng, chửi"},
+  {num:0, mark:"a", label:"Thanh nhẹ", desc:"Thanh nhẹ (khinh thanh) – đọc nhẹ, ngắn, không nhấn giọng, không có dấu.", hanzi:"吗", pinyin:"ma", meaning:"(từ nghi vấn cuối câu)"},
+];
+
+const INITIALS = [
+  {group:"b p m f", items:[
+    {s:"b", hanzi:"爸", pinyin:"bà", meaning:"bố (trong 爸爸)"},
+    {s:"p", hanzi:"苹", pinyin:"píng", meaning:"táo (trong 苹果)"},
+    {s:"m", hanzi:"妈", pinyin:"mā", meaning:"mẹ"},
+    {s:"f", hanzi:"飞", pinyin:"fēi", meaning:"bay"},
+  ]},
+  {group:"d t n l", items:[
+    {s:"d", hanzi:"大", pinyin:"dà", meaning:"to, lớn"},
+    {s:"t", hanzi:"天", pinyin:"tiān", meaning:"trời"},
+    {s:"n", hanzi:"你", pinyin:"nǐ", meaning:"bạn"},
+    {s:"l", hanzi:"来", pinyin:"lái", meaning:"đến"},
+  ]},
+  {group:"g k h", items:[
+    {s:"g", hanzi:"高", pinyin:"gāo", meaning:"cao"},
+    {s:"k", hanzi:"看", pinyin:"kàn", meaning:"xem, nhìn"},
+    {s:"h", hanzi:"好", pinyin:"hǎo", meaning:"tốt, đẹp"},
+  ]},
+  {group:"j q x", items:[
+    {s:"j", hanzi:"家", pinyin:"jiā", meaning:"nhà"},
+    {s:"q", hanzi:"七", pinyin:"qī", meaning:"bảy"},
+    {s:"x", hanzi:"谢", pinyin:"xiè", meaning:"cảm ơn (trong 谢谢)"},
+  ]},
+  {group:"zh ch sh r", items:[
+    {s:"zh", hanzi:"中", pinyin:"zhōng", meaning:"ở giữa, Trung (Quốc)"},
+    {s:"ch", hanzi:"吃", pinyin:"chī", meaning:"ăn"},
+    {s:"sh", hanzi:"是", pinyin:"shì", meaning:"là"},
+    {s:"r", hanzi:"人", pinyin:"rén", meaning:"người"},
+  ]},
+  {group:"z c s", items:[
+    {s:"z", hanzi:"再", pinyin:"zài", meaning:"lại, lần nữa (trong 再见)"},
+    {s:"c", hanzi:"菜", pinyin:"cài", meaning:"rau, món ăn"},
+    {s:"s", hanzi:"三", pinyin:"sān", meaning:"ba"},
+  ]},
+  {group:"y w", items:[
+    {s:"y", hanzi:"有", pinyin:"yǒu", meaning:"có"},
+    {s:"w", hanzi:"我", pinyin:"wǒ", meaning:"tôi"},
+  ]},
+];
+
+const FINALS = [
+  {group:"Nguyên âm đơn", items:[
+    {s:"a", hanzi:"妈", pinyin:"mā", meaning:"mẹ"},
+    {s:"o", hanzi:"喔", pinyin:"ō", meaning:"(thán từ, giống \"ồ\")"},
+    {s:"e", hanzi:"车", pinyin:"chē", meaning:"xe"},
+    {s:"i", hanzi:"你", pinyin:"nǐ", meaning:"bạn"},
+    {s:"u", hanzi:"书", pinyin:"shū", meaning:"sách"},
+    {s:"ü", hanzi:"女", pinyin:"nǚ", meaning:"nữ, con gái"},
+  ]},
+  {group:"Nguyên âm đôi", items:[
+    {s:"ai", hanzi:"爱", pinyin:"ài", meaning:"yêu"},
+    {s:"ei", hanzi:"谁", pinyin:"shéi", meaning:"ai"},
+    {s:"ao", hanzi:"好", pinyin:"hǎo", meaning:"tốt"},
+    {s:"ou", hanzi:"有", pinyin:"yǒu", meaning:"có"},
+  ]},
+  {group:"Vần mũi -n", items:[
+    {s:"an", hanzi:"看", pinyin:"kàn", meaning:"xem"},
+    {s:"en", hanzi:"很", pinyin:"hěn", meaning:"rất"},
+    {s:"in", hanzi:"今", pinyin:"jīn", meaning:"nay (trong 今天)"},
+    {s:"un", hanzi:"春", pinyin:"chūn", meaning:"mùa xuân"},
+    {s:"ün", hanzi:"云", pinyin:"yún", meaning:"mây"},
+  ]},
+  {group:"Vần mũi -ng", items:[
+    {s:"ang", hanzi:"忙", pinyin:"máng", meaning:"bận"},
+    {s:"eng", hanzi:"灯", pinyin:"dēng", meaning:"đèn"},
+    {s:"ing", hanzi:"请", pinyin:"qǐng", meaning:"xin mời"},
+    {s:"ong", hanzi:"红", pinyin:"hóng", meaning:"màu đỏ (trong 红色)"},
+  ]},
+];
+
+const SPELLING_RULES = [
+  {rule:"ü viết thành u sau j, q, x, y", example:"jü→ju, qü→qu, xü→xu, yü→yu — viết là \"u\" nhưng vẫn đọc là \"ü\" (bậm môi tròn, giống âm \"uy\" tiếng Việt)."},
+  {rule:"i / u / ü đứng một mình đổi cách viết", example:"i→yi (衣 yī: áo), u→wu (五 wǔ: số 5), ü→yu (雨 yǔ: mưa)."},
+  {rule:"Dấu thanh luôn đặt trên nguyên âm chính", example:"Thứ tự ưu tiên a > e/o > i/u: hǎo (dấu trên a), guó (dấu trên o vì không có a)."},
+  {rule:"iu đọc như \"iou\", ui đọc như \"uei\"", example:"liù (六, số 6) đọc gần như \"li-ou\"; guì (贵, đắt) đọc gần như \"gu-ei\"."},
+];
+
 const LESSONS = [
+  {special:"pinyin", title:"Pinyin cơ bản", steps:["intro","tones","initials","finals","rules"]},
   {cat:"Số đếm", dialogueTitle:null},
   {cat:"Chào hỏi", dialogueTitle:"Chào hỏi"},
   {cat:"Đại từ", dialogueTitle:"Hỏi tên"},
@@ -576,11 +694,14 @@ const LESSONS = [
   {cat:"Đồ vật & nơi chốn", dialogueTitle:"Mua hàng"},
   {cat:"Động từ", dialogueTitle:"Bạn từ đâu đến"},
   {cat:"Tính từ", dialogueTitle:"Tạm biệt"},
-].map((l,i)=>({
+].map((l,i)=> l.special ? {...l, id:i} : ({
   ...l, id:i, title:l.cat,
-  steps:["vocab","flash","quiz","pinyin", ...(l.dialogueTitle ? ["convo"] : []), "write"]
+  steps:["vocab","flash","quiz", ...(l.dialogueTitle ? ["convo"] : []), "write"]
 }));
-const STEP_LABELS = {vocab:"📖 Từ vựng", flash:"🃏 Ghi nhớ", quiz:"📝 Trắc nghiệm", pinyin:"🔤 Pinyin", convo:"💬 Hội thoại", write:"✍️ Luyện viết"};
+const STEP_LABELS = {
+  vocab:"📖 Từ vựng", flash:"🃏 Ghi nhớ", quiz:"📝 Trắc nghiệm", convo:"💬 Hội thoại", write:"✍️ Luyện viết",
+  intro:"📖 Giới thiệu", tones:"🎵 Thanh điệu", initials:"🔡 Thanh mẫu", finals:"🔤 Vận mẫu", rules:"📐 Quy tắc"
+};
 
 const CATS = [...new Set(VOCAB.map(w=>w.cat))];
 const ALL_LABEL = "Tất cả";
@@ -789,7 +910,7 @@ function runQuiz(container, words, opts){
   function renderQuestion(){
     if(index >= order.length){ renderResult(); return; }
     const word = order[index];
-    const distractors = shuffle(words.filter(w=>w.id!==word.id)).slice(0,3);
+    const distractors = shuffle(words.filter(w=>w.id!==word.id && answerText(w)!==answerText(word))).slice(0,3);
     const choices = shuffle([word, ...distractors]);
     const questionExtra = mode === "pinyin"
       ? `<div class="pinyin-hidden-hint">${word.m}</div>`
@@ -875,24 +996,164 @@ function startQuiz(cat){
 const quizCatState = buildCatButtons(document.getElementById("quizCats"), startQuiz);
 startQuiz(ALL_LABEL);
 
-// ---- PINYIN TAB ----
-const pinyinArea = document.getElementById("pinyinArea");
-function startPinyinPractice(cat){
-  const words = wordsFor(cat);
-  if(words.length < 4){
-    pinyinArea.innerHTML = `<div class="quiz-start">Chủ đề này cần ít nhất 4 từ để luyện pinyin.</div>`;
-    return;
-  }
-  pinyinArea.innerHTML = `<div class="quiz-start">
-    <div>Chọn đúng <b>pinyin</b> cho <b>${words.length}</b> từ chủ đề "<b>${cat}</b>"?</div>
-    <button id="pinyinGo">Bắt đầu luyện pinyin</button>
-  </div>`;
-  document.getElementById("pinyinGo").addEventListener("click", ()=>{
-    runQuiz(pinyinArea, words, {limit: Math.min(10, words.length), mode:"pinyin"});
+// ---- PINYIN FUNDAMENTALS (tones, initials, finals, spelling rules) ----
+function renderToneCards(container){
+  container.innerHTML = `<div class="pinyin-cards"></div>`;
+  const grid = container.querySelector(".pinyin-cards");
+  TONES.forEach(t=>{
+    const card = document.createElement("div");
+    card.className = "tone-card";
+    card.innerHTML = `
+      ${speakPairMarkup()}
+      <div class="tone-label">${t.label} <span class="tone-mark">${t.mark}</span></div>
+      <div class="tone-example hanzi">${t.hanzi} <span class="pinyin">${t.pinyin}</span></div>
+      <div class="tone-meaning">${t.meaning}</div>
+      <div class="tone-desc">${t.desc}</div>`;
+    wireSpeakPair(card, t.hanzi);
+    grid.appendChild(card);
   });
 }
-const pinyinCatState = buildCatButtons(document.getElementById("pinyinCats"), startPinyinPractice);
-startPinyinPractice(ALL_LABEL);
+function renderSoundGroups(container, groups){
+  container.innerHTML = "";
+  groups.forEach(g=>{
+    const section = document.createElement("div");
+    section.className = "sound-group";
+    section.innerHTML = `<div class="sound-group-title">${g.group}</div><div class="sound-items"></div>`;
+    const itemsEl = section.querySelector(".sound-items");
+    g.items.forEach(it=>{
+      const chip = document.createElement("div");
+      chip.className = "sound-item";
+      chip.innerHTML = `
+        ${speakPairMarkup()}
+        <div class="sound-s">${it.s}</div>
+        <div class="sound-ex hanzi">${it.hanzi} <span class="pinyin">${it.pinyin}</span></div>
+        <div class="sound-meaning">${it.meaning}</div>`;
+      wireSpeakPair(chip, it.hanzi);
+      itemsEl.appendChild(chip);
+    });
+    container.appendChild(section);
+  });
+}
+function renderSpellingRules(container){
+  container.innerHTML = "";
+  SPELLING_RULES.forEach((r,i)=>{
+    const card = document.createElement("div");
+    card.className = "spelling-rule-card";
+    card.innerHTML = `<div class="spelling-rule-title">${i+1}. ${r.rule}</div><div class="spelling-rule-ex">${r.example}</div>`;
+    container.appendChild(card);
+  });
+}
+function renderPinyinIntro(container){
+  container.innerHTML = `<div class="pinyin-intro">
+    <p><b>Pinyin (拼音)</b> là hệ thống phiên âm tiếng Trung bằng chữ cái Latin (a, b, c...), giúp người học biết cách đọc chữ Hán mà chưa cần nhớ mặt chữ.</p>
+    <p>Một âm tiết pinyin gồm 3 phần: <b>Thanh mẫu</b> (phụ âm đầu, có thể không có) + <b>Vận mẫu</b> (phần vần) + <b>Thanh điệu</b> (dấu giọng — quyết định nghĩa của từ).</p>
+    <p>Ví dụ: <span class="hanzi">妈</span> = <b>m</b> (thanh mẫu) + <b>a</b> (vận mẫu) + thanh 1 (ˉ) → <b>mā</b>.</p>
+    <div class="warn">⚠️ Khoảng một nửa số âm trong pinyin <b>không đọc giống chữ cái tiếng Anh</b> (ví dụ "c", "q", "x", "zh"...) — đừng đọc theo trực giác tiếng Anh, hãy nghe và bấm 🔊 ở từng mục bên dưới để học đúng âm.</div>
+    <p>Học lần lượt: <b>Thanh điệu → Thanh mẫu → Vận mẫu → Quy tắc chính tả</b>, mỗi mục đều có nút 🔊 nghe bình thường và 🐢 nghe chậm.</p>
+  </div>`;
+}
+function runAudioQuiz(container, items, opts){
+  opts = opts || {};
+  const limit = opts.limit || items.length;
+  const onFinish = opts.onFinish || function(){};
+  let order = shuffle(items).slice(0, limit);
+  let index = 0, score = 0;
+  function renderQuestion(){
+    if(index >= order.length){ renderResult(); return; }
+    const item = order[index];
+    const distractors = shuffle(items.filter(x=>x.key!==item.key)).slice(0,3);
+    const choices = shuffle([item, ...distractors]);
+    container.innerHTML = `
+      <div class="qz-score">Câu ${index+1}/${order.length} · Điểm: ${score}</div>
+      <div class="qz-q"><button class="audio-listen-btn" id="aqListen">🔊 Nghe lại</button></div>
+      <div class="qz-choices" id="aqChoices"></div>`;
+    const playIt = ()=> speak(item.speakText, 0.55);
+    document.getElementById("aqListen").addEventListener("click", playIt);
+    playIt();
+    const choicesEl = container.querySelector("#aqChoices");
+    choices.forEach(ch=>{
+      const b = document.createElement("button");
+      b.textContent = ch.label;
+      b.addEventListener("click", ()=>{
+        choicesEl.querySelectorAll("button").forEach(x=>x.disabled = true);
+        const correct = ch.key === item.key;
+        if(correct){ b.classList.add("correct"); score++; }
+        else {
+          b.classList.add("wrong");
+          choicesEl.querySelectorAll("button").forEach(x=>{ if(x.textContent===item.label) x.classList.add("correct"); });
+        }
+        const next = document.createElement("button");
+        next.className = "qz-next";
+        next.textContent = index+1 < order.length ? "Câu tiếp theo →" : "Xem kết quả →";
+        next.addEventListener("click", ()=>{ index++; renderQuestion(); });
+        container.appendChild(next);
+      });
+      choicesEl.appendChild(b);
+    });
+  }
+  function renderResult(){
+    const pct = order.length ? Math.round(score/order.length*100) : 0;
+    container.innerHTML = `<div class="qz-result"><div>Kết quả</div><div class="big">${score}/${order.length}</div><button class="qz-restart" id="aqRestart">Làm lại</button></div>`;
+    document.getElementById("aqRestart").addEventListener("click", ()=>{
+      index = 0; score = 0; order = shuffle(items).slice(0, limit); renderQuestion();
+    });
+    onFinish({score, total: order.length, pct});
+  }
+  renderQuestion();
+}
+function runToneQuiz(container, opts){
+  const items = TONES.map(t=>({key:t.num, label:t.label, speakText:t.hanzi}));
+  runAudioQuiz(container, items, opts);
+}
+
+function renderPinyinPracticeSection(container){
+  container.innerHTML = `<div class="hint">Ôn lại pinyin của các từ vựng đã học theo từng chủ đề.</div><div class="cats" id="pinyinPracticeCats"></div><div id="pinyinPracticeArea"></div>`;
+  const area = document.getElementById("pinyinPracticeArea");
+  function start(cat){
+    const words = wordsFor(cat);
+    if(words.length < 4){
+      area.innerHTML = `<div class="quiz-start">Chủ đề này cần ít nhất 4 từ để luyện pinyin.</div>`;
+      return;
+    }
+    area.innerHTML = `<div class="quiz-start">
+      <div>Chọn đúng <b>pinyin</b> cho <b>${words.length}</b> từ chủ đề "<b>${cat}</b>"?</div>
+      <button id="pinyinPracticeGo">Bắt đầu luyện pinyin</button>
+    </div>`;
+    document.getElementById("pinyinPracticeGo").addEventListener("click", ()=>{
+      runQuiz(area, words, {limit: Math.min(10, words.length), mode:"pinyin"});
+    });
+  }
+  buildCatButtons(document.getElementById("pinyinPracticeCats"), start);
+  start(ALL_LABEL);
+}
+
+const PINYIN_SECTIONS = ["Giới thiệu","Thanh điệu","Thanh mẫu","Vận mẫu","Quy tắc chính tả","Luyện tập từ vựng"];
+function renderPinyinSection(name){
+  const c = document.getElementById("pinyinContent");
+  if(name === "Giới thiệu") renderPinyinIntro(c);
+  else if(name === "Thanh điệu") renderToneCards(c);
+  else if(name === "Thanh mẫu") renderSoundGroups(c, INITIALS);
+  else if(name === "Vận mẫu") renderSoundGroups(c, FINALS);
+  else if(name === "Quy tắc chính tả") renderSpellingRules(c);
+  else if(name === "Luyện tập từ vựng") renderPinyinPracticeSection(c);
+}
+function initPinyinTab(){
+  const nav = document.getElementById("pinyinSubNav");
+  nav.innerHTML = "";
+  PINYIN_SECTIONS.forEach((name,i)=>{
+    const b = document.createElement("button");
+    b.textContent = name;
+    if(i===0) b.classList.add("active");
+    b.addEventListener("click", ()=>{
+      nav.querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      renderPinyinSection(name);
+    });
+    nav.appendChild(b);
+  });
+  renderPinyinSection(PINYIN_SECTIONS[0]);
+}
+initPinyinTab();
 
 // ---- WRITING TAB (HanziWriter: stroke order + graded quiz) ----
 let writeWords = [], writeIdx = 0, writers = [];
@@ -1135,13 +1396,59 @@ function markStepDoneAndAdvance(){
 }
 function renderStepContent(step){
   const container = document.getElementById("stepContent");
+  if(currentLesson.special === "pinyin"){
+    renderPinyinLessonStep(container, step);
+    return;
+  }
   const words = wordsFor(currentLesson.cat);
   if(step === "vocab") renderVocabStep(container, words);
   else if(step === "flash") renderFlashStep(container, words);
   else if(step === "quiz") renderQuizStep(container, words);
-  else if(step === "pinyin") renderPinyinStep(container, words);
   else if(step === "convo") renderConvoStep(container, currentLesson.dialogueTitle);
   else if(step === "write") renderWriteStep(container, words);
+}
+function renderPinyinLessonStep(container, step){
+  if(step === "intro"){
+    renderPinyinIntro(container);
+    const btn = document.createElement("button");
+    btn.className = "lesson-confirm";
+    btn.textContent = "Tôi đã đọc xong ✓";
+    btn.addEventListener("click", markStepDoneAndAdvance);
+    container.appendChild(btn);
+  } else if(step === "tones"){
+    container.innerHTML = `<div class="hint">Nghe kỹ và bấm 🔊 để tự luyện trước khi làm bài kiểm tra bên dưới.</div><div id="toneCardsWrap"></div><div class="hint" style="margin-top:16px;">Đạt 80% để qua bước tiếp theo.</div><button class="lesson-confirm" id="toneQuizStart">Bắt đầu kiểm tra nghe thanh điệu</button><div id="toneQuizArea"></div>`;
+    renderToneCards(document.getElementById("toneCardsWrap"));
+    document.getElementById("toneQuizStart").addEventListener("click", ()=>{
+      const qArea = document.getElementById("toneQuizArea");
+      runToneQuiz(qArea, {
+        onFinish: (r)=>{
+          const note = document.createElement("div");
+          if(r.pct >= 80){
+            note.className = "lesson-pass-note";
+            note.textContent = "✓ Đạt yêu cầu! Bấm 'Tiếp theo' bên dưới.";
+            qArea.appendChild(note);
+            markStepDoneAndAdvance();
+          } else {
+            note.className = "lesson-fail-note";
+            note.textContent = "Chưa đạt 80%, bấm 'Làm lại' để thử lại.";
+            qArea.appendChild(note);
+          }
+        }
+      });
+    });
+  } else if(step === "initials"){
+    container.innerHTML = `<div class="hint">Nghe từng thanh mẫu rồi bấm hoàn tất.</div><div id="initialsWrap"></div><button class="lesson-confirm" id="initialsDoneBtn">Tôi đã nghe và luyện xong ✓</button>`;
+    renderSoundGroups(document.getElementById("initialsWrap"), INITIALS);
+    document.getElementById("initialsDoneBtn").addEventListener("click", markStepDoneAndAdvance);
+  } else if(step === "finals"){
+    container.innerHTML = `<div class="hint">Nghe từng vận mẫu rồi bấm hoàn tất.</div><div id="finalsWrap"></div><button class="lesson-confirm" id="finalsDoneBtn">Tôi đã nghe và luyện xong ✓</button>`;
+    renderSoundGroups(document.getElementById("finalsWrap"), FINALS);
+    document.getElementById("finalsDoneBtn").addEventListener("click", markStepDoneAndAdvance);
+  } else if(step === "rules"){
+    container.innerHTML = `<div class="hint">Đọc kỹ các quy tắc chính tả đặc biệt rồi bấm hoàn tất.</div><div id="rulesWrap"></div><button class="lesson-confirm" id="spellingRulesDoneBtn">Tôi đã đọc xong ✓</button>`;
+    renderSpellingRules(document.getElementById("rulesWrap"));
+    document.getElementById("spellingRulesDoneBtn").addEventListener("click", markStepDoneAndAdvance);
+  }
 }
 function renderVocabStep(container, words){
   container.innerHTML = `<div class="hint">Xem qua hết các từ bên dưới rồi bấm nút hoàn tất.</div><div id="lessonVocabGrid"></div><button class="lesson-confirm" id="vocabDoneBtn">Tôi đã xem xong ✓</button>`;
@@ -1164,33 +1471,6 @@ function renderQuizStep(container, words){
   document.getElementById("lessonQuizGo").addEventListener("click", ()=>{
     runQuiz(container, words, {
       limit: Math.min(10, words.length),
-      onFinish: (result)=>{
-        const note = document.createElement("div");
-        if(result.pct >= 80){
-          note.className = "lesson-pass-note";
-          note.textContent = "✓ Đạt yêu cầu! Bấm 'Tiếp theo' bên dưới để qua bước kế.";
-          container.appendChild(note);
-          markStepDoneAndAdvance();
-        } else {
-          note.className = "lesson-fail-note";
-          note.textContent = "Chưa đạt 80%, hãy bấm 'Làm lại' ở trên để thử lại.";
-          container.appendChild(note);
-        }
-      }
-    });
-  });
-}
-function renderPinyinStep(container, words){
-  if(words.length < 4){
-    container.innerHTML = `<div class="quiz-start">Chủ đề này chưa đủ từ để luyện pinyin.</div><button class="lesson-confirm" id="pinyinSkip">Bỏ qua bước này ✓</button>`;
-    document.getElementById("pinyinSkip").addEventListener("click", markStepDoneAndAdvance);
-    return;
-  }
-  container.innerHTML = `<div class="quiz-start"><div>Chọn đúng <b>pinyin</b> — làm đúng từ <b>80%</b> trở lên để qua bước này.</div><button id="lessonPinyinGo">Bắt đầu</button></div>`;
-  document.getElementById("lessonPinyinGo").addEventListener("click", ()=>{
-    runQuiz(container, words, {
-      limit: Math.min(10, words.length),
-      mode: "pinyin",
       onFinish: (result)=>{
         const note = document.createElement("div");
         if(result.pct >= 80){

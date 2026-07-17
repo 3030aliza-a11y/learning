@@ -25,6 +25,13 @@
   header h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px;}
   header h1 .hanzi{font-size:30px;margin-right:8px;}
   header p{margin:0;opacity:.9;font-size:14px;}
+  .streak-badge{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.18);
+    padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;}
+
+  .speak-btn{background:none;border:1px solid var(--line);color:var(--red);
+    width:30px;height:30px;border-radius:50%;font-size:14px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;}
+  .speak-btn:hover{background:#fdeceb;}
 
   nav{max-width:900px;margin:-40px auto 0;padding:0 12px;position:relative;z-index:2;
     display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
@@ -51,6 +58,7 @@
   .word-card .hanzi{font-size:34px;line-height:1.1;}
   .word-card .pinyin{color:var(--red);font-size:14px;margin-top:6px;font-weight:600;}
   .word-card .meaning{color:var(--muted);font-size:13px;margin-top:4px;}
+  .word-card .speak-btn{position:absolute;top:8px;left:10px;}
   .star{position:absolute;top:8px;right:10px;cursor:pointer;font-size:15px;color:#ddd;}
   .star.on{color:var(--gold);}
 
@@ -72,6 +80,7 @@
   .fc-face .pinyin{color:var(--red);font-size:20px;margin-top:10px;font-weight:600;}
   .fc-face .meaning{font-size:24px;font-weight:700;color:var(--ink);}
   .fc-face .sub{color:var(--muted);font-size:14px;margin-top:8px;}
+  .fc-face .speak-btn{position:absolute;top:10px;right:10px;}
   .fc-hint{font-size:12px;color:var(--muted);}
   .fc-actions{display:flex;gap:12px;}
   .fc-actions button{padding:12px 22px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
@@ -87,8 +96,10 @@
   .qz-score{font-size:13px;color:var(--muted);text-align:center;margin-bottom:10px;}
   .qz-q{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px 16px;
     text-align:center;box-shadow:var(--shadow);margin-bottom:16px;}
+  .qz-q{position:relative;}
   .qz-q .hanzi{font-size:56px;}
   .qz-q .pinyin{color:var(--red);font-size:16px;margin-top:8px;font-weight:600;}
+  .qz-q .speak-btn{position:absolute;top:10px;right:10px;}
   .qz-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .qz-choices button{background:var(--card);border:1px solid var(--line);border-radius:12px;
     padding:14px 10px;font-size:15px;cursor:pointer;font-weight:600;color:var(--ink);}
@@ -102,20 +113,20 @@
 
   /* Writing */
   .write-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
-  .write-info{text-align:center;}
+  .write-info{text-align:center;position:relative;display:flex;align-items:center;gap:10px;}
   .write-info .pinyin{color:var(--red);font-weight:700;font-size:18px;}
   .write-info .meaning{color:var(--muted);font-size:14px;}
-  .tian{width:180px;height:180px;background:var(--card);border:2px solid var(--gold);border-radius:12px;
-    position:relative;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
-  .tian::before,.tian::after{content:"";position:absolute;background:var(--line);}
+  .char-writers{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+  .tian{width:150px;height:150px;background:var(--card);border:2px solid var(--gold);border-radius:12px;
+    position:relative;box-shadow:var(--shadow);touch-action:none;}
+  .tian::before,.tian::after{content:"";position:absolute;background:var(--line);pointer-events:none;}
   .tian::before{left:50%;top:0;bottom:0;width:1px;}
   .tian::after{top:50%;left:0;right:0;height:1px;}
-  .tian .hanzi{font-size:110px;color:var(--ink);opacity:.85;position:relative;z-index:1;}
-  canvas{touch-action:none;background:var(--card);border:2px dashed var(--line);border-radius:12px;}
-  .write-actions{display:flex;gap:10px;}
+  .write-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
   .write-actions button{padding:10px 18px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;}
   .btn-clear{background:#fdeceb;color:var(--red-dark);}
   .btn-next{background:var(--red);color:#fff;}
+  .write-feedback{min-height:20px;font-size:14px;color:var(--green);font-weight:600;text-align:center;}
 
   footer{text-align:center;color:var(--muted);font-size:12px;padding:20px;}
 </style>
@@ -123,8 +134,9 @@
 <body>
 
 <header>
+  <div class="streak-badge" id="streakBadge"></div>
   <h1><span class="hanzi">学中文</span>Học Tiếng Trung Cơ Bản</h1>
-  <p>Từ vựng · chữ Hán · pinyin · luyện viết · trắc nghiệm</p>
+  <p>Từ vựng · chữ Hán · pinyin · phát âm · luyện viết · trắc nghiệm</p>
 </header>
 
 <nav>
@@ -152,10 +164,12 @@
       <div class="flashcard" id="fcCard">
         <div class="flashcard-inner">
           <div class="fc-face front">
+            <button class="speak-btn" id="fcSpeakFront">🔊</button>
             <div class="hanzi" id="fcHanzi"></div>
             <div class="fc-hint">Nhấn để xem nghĩa</div>
           </div>
           <div class="fc-face back">
+            <button class="speak-btn" id="fcSpeakBack">🔊</button>
             <div class="meaning" id="fcMeaning"></div>
             <div class="pinyin" id="fcPinyin"></div>
             <div class="sub" id="fcHanziSmall"></div>
@@ -180,16 +194,20 @@
   <!-- WRITING -->
   <section id="write" class="panel">
     <div class="cats" id="writeCats"></div>
+    <div class="hint">Bấm "Xem thứ tự nét" để xem cách viết, rồi bấm "Kiểm tra viết" để tự viết và được chấm điểm</div>
     <div class="write-wrap">
       <div class="write-info">
-        <div class="pinyin" id="wPinyin"></div>
-        <div class="meaning" id="wMeaning"></div>
+        <button class="speak-btn" id="wSpeak">🔊</button>
+        <div>
+          <div class="pinyin" id="wPinyin"></div>
+          <div class="meaning" id="wMeaning"></div>
+        </div>
       </div>
-      <div class="tian"><div class="hanzi" id="wHanzi"></div></div>
-      <div>Tô theo nét chữ bên dưới:</div>
-      <canvas id="wCanvas" width="180" height="180"></canvas>
+      <div class="char-writers" id="charWriters"></div>
+      <div class="write-feedback" id="wFeedback"></div>
       <div class="write-actions">
-        <button class="btn-clear" id="wClear">Xóa nét vẽ</button>
+        <button class="btn-clear" id="wAnimate">▶ Xem thứ tự nét</button>
+        <button class="btn-clear" id="wQuiz">✏️ Kiểm tra viết</button>
         <button class="btn-next" id="wNext">Từ tiếp theo →</button>
       </div>
     </div>
@@ -199,7 +217,36 @@
 
 <footer>做中文学习，一步一步来 · Học từng chút một, mỗi ngày một chữ</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.3/dist/hanzi-writer.min.js"></script>
 <script>
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "zh-CN";
+  utter.rate = 0.8;
+  speechSynthesis.speak(utter);
+}
+
+function localDateStr(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function updateStreak(){
+  const key = "hoctiengtrung_streak_v1";
+  const todayStr = localDateStr(new Date());
+  let data;
+  try{ data = JSON.parse(localStorage.getItem(key)) || {}; }catch(e){ data = {}; }
+  if(data.lastDate !== todayStr){
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate()-1);
+    data.streak = (data.lastDate === localDateStr(yesterday)) ? (data.streak||0)+1 : 1;
+    data.lastDate = todayStr;
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+  document.getElementById("streakBadge").textContent = `🔥 ${data.streak||1} ngày liên tiếp`;
+}
+updateStreak();
+
 const VOCAB = [
   // Số đếm
   {c:"零",p:"líng",m:"số không",cat:"Số đếm"},
@@ -384,6 +431,7 @@ function renderVocab(cat){
     card.className = "word-card";
     const known = store.isKnown(w.id);
     card.innerHTML = `
+      <button class="speak-btn">🔊</button>
       <span class="star ${known?"on":""}" data-id="${w.id}">★</span>
       <div class="hanzi">${w.c}</div>
       <div class="pinyin">${w.p}</div>
@@ -393,6 +441,7 @@ function renderVocab(cat){
       store.setKnown(w.id, nowKnown);
       e.target.classList.toggle("on", nowKnown);
     });
+    card.querySelector(".speak-btn").addEventListener("click", ()=> speak(w.c));
     vocabGrid.appendChild(card);
   });
 }
@@ -435,6 +484,14 @@ function nextFlash(total){
   document.getElementById("fcHanziSmall").textContent = fcCurrent.c;
 }
 fcCardEl.addEventListener("click", ()=> fcCardEl.classList.toggle("flipped"));
+document.getElementById("fcSpeakFront").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  if(fcCurrent) speak(fcCurrent.c);
+});
+document.getElementById("fcSpeakBack").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  if(fcCurrent) speak(fcCurrent.c);
+});
 document.getElementById("fcYes").addEventListener("click", ()=>{
   if(!fcCurrent) return;
   store.setKnown(fcCurrent.id, true);
@@ -494,10 +551,12 @@ function renderQuizQuestion(){
   quizArea.innerHTML = `
     <div class="qz-score">Câu ${quizIndex+1}/${quizOrder.length} · Điểm: ${quizScore}</div>
     <div class="qz-q">
+      <button class="speak-btn" id="qzSpeak">🔊</button>
       <div class="hanzi">${word.c}</div>
       <div class="pinyin">${word.p}</div>
     </div>
     <div class="qz-choices" id="qzChoices"></div>`;
+  document.getElementById("qzSpeak").addEventListener("click", ()=> speak(word.c));
   const choicesEl = document.getElementById("qzChoices");
   choices.forEach(ch=>{
     const b = document.createElement("button");
@@ -524,32 +583,37 @@ function renderQuizQuestion(){
 const quizCatState = buildCatButtons(document.getElementById("quizCats"), startQuiz);
 startQuiz(ALL_LABEL);
 
-// ---- WRITING TAB ----
-let writeWords = [], writeIdx = 0;
-const wCanvas = document.getElementById("wCanvas");
-const wCtx = wCanvas.getContext("2d");
-wCtx.lineWidth = 6; wCtx.lineCap = "round"; wCtx.strokeStyle = "#a8232a";
-let drawing = false, lastX=0, lastY=0;
+// ---- WRITING TAB (HanziWriter: stroke order + graded quiz) ----
+let writeWords = [], writeIdx = 0, writers = [];
+const wFeedback = document.getElementById("wFeedback");
 
-function canvasPos(e){
-  const rect = wCanvas.getBoundingClientRect();
-  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+function buildCharWriters(word){
+  const container = document.getElementById("charWriters");
+  container.innerHTML = "";
+  writers = [];
+  const chars = Array.from(word.c).filter(ch => /[㐀-鿿]/.test(ch));
+  chars.forEach((ch, i)=>{
+    const box = document.createElement("div");
+    box.className = "tian";
+    box.id = "char-target-" + i;
+    container.appendChild(box);
+  });
+  chars.forEach((ch, i)=>{
+    const writer = HanziWriter.create("char-target-" + i, ch, {
+      width: 150,
+      height: 150,
+      padding: 5,
+      showOutline: true,
+      showCharacter: false,
+      strokeAnimationSpeed: 1,
+      delayBetweenStrokes: 300,
+      strokeColor: "#a8232a",
+      outlineColor: "#eadfcd",
+      drawingWidth: 24
+    });
+    writers.push(writer);
+  });
 }
-wCanvas.addEventListener("pointerdown", e=>{
-  drawing = true;
-  const p = canvasPos(e); lastX=p.x; lastY=p.y;
-});
-wCanvas.addEventListener("pointermove", e=>{
-  if(!drawing) return;
-  const p = canvasPos(e);
-  wCtx.beginPath(); wCtx.moveTo(lastX,lastY); wCtx.lineTo(p.x,p.y); wCtx.stroke();
-  lastX=p.x; lastY=p.y;
-});
-["pointerup","pointerleave","pointercancel"].forEach(ev=>
-  wCanvas.addEventListener(ev, ()=> drawing=false));
-document.getElementById("wClear").addEventListener("click", ()=>{
-  wCtx.clearRect(0,0,wCanvas.width,wCanvas.height);
-});
 
 function startWrite(cat){
   writeWords = shuffle(wordsFor(cat));
@@ -560,11 +624,39 @@ function showWriteWord(){
   if(writeWords.length===0) return;
   if(writeIdx >= writeWords.length) writeIdx = 0;
   const w = writeWords[writeIdx];
-  document.getElementById("wHanzi").textContent = w.c;
   document.getElementById("wPinyin").textContent = w.p;
   document.getElementById("wMeaning").textContent = w.m;
-  wCtx.clearRect(0,0,wCanvas.width,wCanvas.height);
+  wFeedback.textContent = "";
+  buildCharWriters(w);
 }
+document.getElementById("wSpeak").addEventListener("click", ()=>{
+  const w = writeWords[writeIdx];
+  if(w) speak(w.c);
+});
+document.getElementById("wAnimate").addEventListener("click", ()=>{
+  writers.forEach((writer, i)=> setTimeout(()=> writer.animateCharacter(), i*1300));
+});
+document.getElementById("wQuiz").addEventListener("click", ()=>{
+  if(writers.length===0) return;
+  wFeedback.textContent = `Hãy viết vào ô 1/${writers.length}...`;
+  let idx = 0;
+  function quizNext(){
+    if(idx >= writers.length){
+      wFeedback.textContent = "🎉 Hoàn thành! Bấm 'Từ tiếp theo' để học chữ khác.";
+      return;
+    }
+    writers[idx].quiz({
+      onComplete: (summary)=>{
+        idx++;
+        if(idx < writers.length){
+          wFeedback.textContent = `Đúng! (sai ${summary.totalMistakes} lần) — viết tiếp ô ${idx+1}/${writers.length}...`;
+        }
+        setTimeout(quizNext, 500);
+      }
+    });
+  }
+  quizNext();
+});
 document.getElementById("wNext").addEventListener("click", ()=>{
   writeIdx++; showWriteWord();
 });

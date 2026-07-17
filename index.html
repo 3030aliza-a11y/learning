@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="theme-color" content="#d1373f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Học Tiếng Trung">
+<title>学中文 · Học Tiếng Trung Cơ Bản</title>
+<style>
+  :root{
+    --red:#d1373f; --red-dark:#a8232a; --gold:#c9a24a; --ink:#2b2320;
+    --paper:#fffaf3; --card:#ffffff; --line:#eadfcd; --muted:#8a7c68;
+    --green:#3f9142; --shadow:0 6px 20px rgba(43,35,32,.08);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;}
+  .hanzi{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC","Heiti SC",sans-serif;}
+
+  header{background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;
+    padding:22px 16px 60px;text-align:center;position:relative;}
+  header h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px;}
+  header h1 .hanzi{font-size:30px;margin-right:8px;}
+  header p{margin:0;opacity:.9;font-size:14px;}
+
+  nav{max-width:900px;margin:-40px auto 0;padding:0 12px;position:relative;z-index:2;
+    display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+  nav button{background:var(--card);border:1px solid var(--line);color:var(--ink);
+    padding:12px 18px;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;
+    box-shadow:var(--shadow);transition:.15s;}
+  nav button.active{background:var(--red);color:#fff;border-color:var(--red);}
+  nav button:hover{transform:translateY(-1px);}
+
+  main{max-width:900px;margin:0 auto;padding:28px 16px 60px;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .cats button{background:var(--card);border:1px solid var(--line);color:var(--muted);
+    padding:8px 14px;border-radius:999px;font-size:13px;cursor:pointer;font-weight:600;}
+  .cats button.active{background:var(--gold);color:#fff;border-color:var(--gold);}
+
+  /* Vocabulary grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+  .word-card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:16px 10px;text-align:center;box-shadow:var(--shadow);position:relative;}
+  .word-card .hanzi{font-size:34px;line-height:1.1;}
+  .word-card .pinyin{color:var(--red);font-size:14px;margin-top:6px;font-weight:600;}
+  .word-card .meaning{color:var(--muted);font-size:13px;margin-top:4px;}
+  .star{position:absolute;top:8px;right:10px;cursor:pointer;font-size:15px;color:#ddd;}
+  .star.on{color:var(--gold);}
+
+  .hint{color:var(--muted);font-size:13px;text-align:center;margin-bottom:14px;}
+
+  /* Flashcards */
+  .fc-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .fc-progress{width:100%;max-width:360px;height:8px;background:var(--line);border-radius:99px;overflow:hidden;}
+  .fc-progress-bar{height:100%;background:var(--green);width:0%;transition:.3s;}
+  .fc-counter{font-size:13px;color:var(--muted);}
+  .flashcard{width:100%;max-width:360px;height:230px;perspective:1000px;cursor:pointer;}
+  .flashcard-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d;}
+  .flashcard.flipped .flashcard-inner{transform:rotateY(180deg);}
+  .fc-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;
+    background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;}
+  .fc-face.back{transform:rotateY(180deg);}
+  .fc-face .hanzi{font-size:64px;}
+  .fc-face .pinyin{color:var(--red);font-size:20px;margin-top:10px;font-weight:600;}
+  .fc-face .meaning{font-size:24px;font-weight:700;color:var(--ink);}
+  .fc-face .sub{color:var(--muted);font-size:14px;margin-top:8px;}
+  .fc-hint{font-size:12px;color:var(--muted);}
+  .fc-actions{display:flex;gap:12px;}
+  .fc-actions button{padding:12px 22px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn-no{background:#fdeceb;color:var(--red-dark);}
+  .btn-yes{background:#e8f5e9;color:var(--green);}
+  .fc-reset{background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:13px;}
+  .fc-done{text-align:center;color:var(--muted);padding:40px 0;}
+
+  /* Quiz */
+  .quiz-start{text-align:center;padding:30px 0;}
+  .quiz-start button, .qz-restart{background:var(--red);color:#fff;border:none;padding:14px 28px;
+    border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;}
+  .qz-score{font-size:13px;color:var(--muted);text-align:center;margin-bottom:10px;}
+  .qz-q{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px 16px;
+    text-align:center;box-shadow:var(--shadow);margin-bottom:16px;}
+  .qz-q .hanzi{font-size:56px;}
+  .qz-q .pinyin{color:var(--red);font-size:16px;margin-top:8px;font-weight:600;}
+  .qz-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .qz-choices button{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px 10px;font-size:15px;cursor:pointer;font-weight:600;color:var(--ink);}
+  .qz-choices button.correct{background:#e8f5e9;border-color:var(--green);color:var(--green);}
+  .qz-choices button.wrong{background:#fdeceb;border-color:var(--red);color:var(--red-dark);}
+  .qz-choices button:disabled{cursor:default;}
+  .qz-next{display:block;margin:16px auto 0;background:var(--gold);color:#fff;border:none;
+    padding:10px 22px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+  .qz-result{text-align:center;padding:30px 0;}
+  .qz-result .big{font-size:40px;font-weight:800;color:var(--red);}
+
+  /* Writing */
+  .write-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .write-info{text-align:center;}
+  .write-info .pinyin{color:var(--red);font-weight:700;font-size:18px;}
+  .write-info .meaning{color:var(--muted);font-size:14px;}
+  .tian{width:180px;height:180px;background:var(--card);border:2px solid var(--gold);border-radius:12px;
+    position:relative;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
+  .tian::before,.tian::after{content:"";position:absolute;background:var(--line);}
+  .tian::before{left:50%;top:0;bottom:0;width:1px;}
+  .tian::after{top:50%;left:0;right:0;height:1px;}
+  .tian .hanzi{font-size:110px;color:var(--ink);opacity:.85;position:relative;z-index:1;}
+  canvas{touch-action:none;background:var(--card);border:2px dashed var(--line);border-radius:12px;}
+  .write-actions{display:flex;gap:10px;}
+  .write-actions button{padding:10px 18px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;}
+  .btn-clear{background:#fdeceb;color:var(--red-dark);}
+  .btn-next{background:var(--red);color:#fff;}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:20px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="hanzi">学中文</span>Học Tiếng Trung Cơ Bản</h1>
+  <p>Từ vựng · chữ Hán · pinyin · luyện viết · trắc nghiệm</p>
+</header>
+
+<nav>
+  <button data-tab="vocab" class="active">📖 Từ vựng</button>
+  <button data-tab="flash">🃏 Thẻ ghi nhớ</button>
+  <button data-tab="quiz">📝 Trắc nghiệm</button>
+  <button data-tab="write">✍️ Luyện viết</button>
+</nav>
+
+<main>
+
+  <!-- VOCAB -->
+  <section id="vocab" class="panel active">
+    <div class="cats" id="vocabCats"></div>
+    <div class="hint">Nhấn ★ để đánh dấu từ đã thuộc</div>
+    <div class="grid" id="vocabGrid"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="flash" class="panel">
+    <div class="cats" id="flashCats"></div>
+    <div class="fc-wrap">
+      <div class="fc-progress"><div class="fc-progress-bar" id="fcBar"></div></div>
+      <div class="fc-counter" id="fcCounter"></div>
+      <div class="flashcard" id="fcCard">
+        <div class="flashcard-inner">
+          <div class="fc-face front">
+            <div class="hanzi" id="fcHanzi"></div>
+            <div class="fc-hint">Nhấn để xem nghĩa</div>
+          </div>
+          <div class="fc-face back">
+            <div class="meaning" id="fcMeaning"></div>
+            <div class="pinyin" id="fcPinyin"></div>
+            <div class="sub" id="fcHanziSmall"></div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-actions">
+        <button class="btn-no" id="fcNo">✗ Chưa thuộc</button>
+        <button class="btn-yes" id="fcYes">✓ Đã thuộc</button>
+      </div>
+      <div id="fcDoneWrap"></div>
+      <button class="fc-reset" id="fcReset">Đặt lại tiến độ chủ đề này</button>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="panel">
+    <div class="cats" id="quizCats"></div>
+    <div id="quizArea"></div>
+  </section>
+
+  <!-- WRITING -->
+  <section id="write" class="panel">
+    <div class="cats" id="writeCats"></div>
+    <div class="write-wrap">
+      <div class="write-info">
+        <div class="pinyin" id="wPinyin"></div>
+        <div class="meaning" id="wMeaning"></div>
+      </div>
+      <div class="tian"><div class="hanzi" id="wHanzi"></div></div>
+      <div>Tô theo nét chữ bên dưới:</div>
+      <canvas id="wCanvas" width="180" height="180"></canvas>
+      <div class="write-actions">
+        <button class="btn-clear" id="wClear">Xóa nét vẽ</button>
+        <button class="btn-next" id="wNext">Từ tiếp theo →</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>做中文学习，一步一步来 · Học từng chút một, mỗi ngày một chữ</footer>
+
+<script>
+const VOCAB = [
+  // Số đếm
+  {c:"零",p:"líng",m:"số không",cat:"Số đếm"},
+  {c:"一",p:"yī",m:"một",cat:"Số đếm"},
+  {c:"二",p:"èr",m:"hai",cat:"Số đếm"},
+  {c:"三",p:"sān",m:"ba",cat:"Số đếm"},
+  {c:"四",p:"sì",m:"bốn",cat:"Số đếm"},
+  {c:"五",p:"wǔ",m:"năm",cat:"Số đếm"},
+  {c:"六",p:"liù",m:"sáu",cat:"Số đếm"},
+  {c:"七",p:"qī",m:"bảy",cat:"Số đếm"},
+  {c:"八",p:"bā",m:"tám",cat:"Số đếm"},
+  {c:"九",p:"jiǔ",m:"chín",cat:"Số đếm"},
+  {c:"十",p:"shí",m:"mười",cat:"Số đếm"},
+  {c:"百",p:"bǎi",m:"trăm",cat:"Số đếm"},
+  {c:"千",p:"qiān",m:"nghìn",cat:"Số đếm"},
+  {c:"两",p:"liǎng",m:"hai (lượng từ)",cat:"Số đếm"},
+  {c:"几",p:"jǐ",m:"mấy, bao nhiêu",cat:"Số đếm"},
+
+  // Chào hỏi
+  {c:"你好",p:"nǐ hǎo",m:"xin chào",cat:"Chào hỏi"},
+  {c:"你好吗",p:"nǐ hǎo ma",m:"bạn khỏe không",cat:"Chào hỏi"},
+  {c:"再见",p:"zàijiàn",m:"tạm biệt",cat:"Chào hỏi"},
+  {c:"谢谢",p:"xièxie",m:"cảm ơn",cat:"Chào hỏi"},
+  {c:"不客气",p:"bú kèqi",m:"không có gì",cat:"Chào hỏi"},
+  {c:"对不起",p:"duìbuqǐ",m:"xin lỗi",cat:"Chào hỏi"},
+  {c:"没关系",p:"méi guānxi",m:"không sao đâu",cat:"Chào hỏi"},
+  {c:"请",p:"qǐng",m:"xin mời",cat:"Chào hỏi"},
+  {c:"早上好",p:"zǎoshang hǎo",m:"chào buổi sáng",cat:"Chào hỏi"},
+  {c:"晚安",p:"wǎn'ān",m:"chúc ngủ ngon",cat:"Chào hỏi"},
+
+  // Đại từ & nghi vấn
+  {c:"我",p:"wǒ",m:"tôi",cat:"Đại từ"},
+  {c:"你",p:"nǐ",m:"bạn",cat:"Đại từ"},
+  {c:"他",p:"tā",m:"anh ấy",cat:"Đại từ"},
+  {c:"她",p:"tā",m:"cô ấy",cat:"Đại từ"},
+  {c:"我们",p:"wǒmen",m:"chúng tôi",cat:"Đại từ"},
+  {c:"你们",p:"nǐmen",m:"các bạn",cat:"Đại từ"},
+  {c:"他们",p:"tāmen",m:"họ",cat:"Đại từ"},
+  {c:"这",p:"zhè",m:"cái này",cat:"Đại từ"},
+  {c:"那",p:"nà",m:"cái kia",cat:"Đại từ"},
+  {c:"谁",p:"shéi",m:"ai",cat:"Đại từ"},
+  {c:"什么",p:"shénme",m:"cái gì",cat:"Đại từ"},
+  {c:"哪里",p:"nǎlǐ",m:"ở đâu",cat:"Đại từ"},
+  {c:"怎么",p:"zěnme",m:"như thế nào",cat:"Đại từ"},
+  {c:"为什么",p:"wèishénme",m:"tại sao",cat:"Đại từ"},
+
+  // Gia đình
+  {c:"爸爸",p:"bàba",m:"bố",cat:"Gia đình"},
+  {c:"妈妈",p:"māma",m:"mẹ",cat:"Gia đình"},
+  {c:"哥哥",p:"gēge",m:"anh trai",cat:"Gia đình"},
+  {c:"姐姐",p:"jiějie",m:"chị gái",cat:"Gia đình"},
+  {c:"弟弟",p:"dìdi",m:"em trai",cat:"Gia đình"},
+  {c:"妹妹",p:"mèimei",m:"em gái",cat:"Gia đình"},
+  {c:"儿子",p:"érzi",m:"con trai",cat:"Gia đình"},
+  {c:"女儿",p:"nǚ'ér",m:"con gái",cat:"Gia đình"},
+  {c:"爷爷",p:"yéye",m:"ông nội",cat:"Gia đình"},
+  {c:"奶奶",p:"nǎinai",m:"bà nội",cat:"Gia đình"},
+  {c:"朋友",p:"péngyou",m:"bạn bè",cat:"Gia đình"},
+  {c:"老师",p:"lǎoshī",m:"giáo viên",cat:"Gia đình"},
+  {c:"学生",p:"xuésheng",m:"học sinh",cat:"Gia đình"},
+
+  // Thời gian
+  {c:"今天",p:"jīntiān",m:"hôm nay",cat:"Thời gian"},
+  {c:"明天",p:"míngtiān",m:"ngày mai",cat:"Thời gian"},
+  {c:"昨天",p:"zuótiān",m:"hôm qua",cat:"Thời gian"},
+  {c:"现在",p:"xiànzài",m:"bây giờ",cat:"Thời gian"},
+  {c:"早上",p:"zǎoshang",m:"buổi sáng",cat:"Thời gian"},
+  {c:"晚上",p:"wǎnshang",m:"buổi tối",cat:"Thời gian"},
+  {c:"星期一",p:"xīngqīyī",m:"thứ hai",cat:"Thời gian"},
+  {c:"星期天",p:"xīngqītiān",m:"chủ nhật",cat:"Thời gian"},
+  {c:"年",p:"nián",m:"năm",cat:"Thời gian"},
+  {c:"月",p:"yuè",m:"tháng",cat:"Thời gian"},
+  {c:"日",p:"rì",m:"ngày",cat:"Thời gian"},
+  {c:"点",p:"diǎn",m:"giờ (đồng hồ)",cat:"Thời gian"},
+
+  // Màu sắc
+  {c:"红色",p:"hóngsè",m:"màu đỏ",cat:"Màu sắc"},
+  {c:"黄色",p:"huángsè",m:"màu vàng",cat:"Màu sắc"},
+  {c:"蓝色",p:"lánsè",m:"màu xanh dương",cat:"Màu sắc"},
+  {c:"绿色",p:"lǜsè",m:"màu xanh lá",cat:"Màu sắc"},
+  {c:"黑色",p:"hēisè",m:"màu đen",cat:"Màu sắc"},
+  {c:"白色",p:"báisè",m:"màu trắng",cat:"Màu sắc"},
+
+  // Ăn uống
+  {c:"水",p:"shuǐ",m:"nước",cat:"Ăn uống"},
+  {c:"茶",p:"chá",m:"trà",cat:"Ăn uống"},
+  {c:"米饭",p:"mǐfàn",m:"cơm",cat:"Ăn uống"},
+  {c:"面条",p:"miàntiáo",m:"mì",cat:"Ăn uống"},
+  {c:"鸡蛋",p:"jīdàn",m:"trứng gà",cat:"Ăn uống"},
+  {c:"苹果",p:"píngguǒ",m:"quả táo",cat:"Ăn uống"},
+  {c:"牛奶",p:"niúnǎi",m:"sữa",cat:"Ăn uống"},
+  {c:"咖啡",p:"kāfēi",m:"cà phê",cat:"Ăn uống"},
+  {c:"菜",p:"cài",m:"rau, món ăn",cat:"Ăn uống"},
+
+  // Đồ vật & nơi chốn
+  {c:"学校",p:"xuéxiào",m:"trường học",cat:"Đồ vật & nơi chốn"},
+  {c:"家",p:"jiā",m:"nhà",cat:"Đồ vật & nơi chốn"},
+  {c:"医院",p:"yīyuàn",m:"bệnh viện",cat:"Đồ vật & nơi chốn"},
+  {c:"商店",p:"shāngdiàn",m:"cửa hàng",cat:"Đồ vật & nơi chốn"},
+  {c:"书",p:"shū",m:"sách",cat:"Đồ vật & nơi chốn"},
+  {c:"桌子",p:"zhuōzi",m:"cái bàn",cat:"Đồ vật & nơi chốn"},
+  {c:"椅子",p:"yǐzi",m:"cái ghế",cat:"Đồ vật & nơi chốn"},
+  {c:"手机",p:"shǒujī",m:"điện thoại",cat:"Đồ vật & nơi chốn"},
+  {c:"电脑",p:"diànnǎo",m:"máy tính",cat:"Đồ vật & nơi chốn"},
+  {c:"车",p:"chē",m:"xe",cat:"Đồ vật & nơi chốn"},
+
+  // Động từ
+  {c:"是",p:"shì",m:"là",cat:"Động từ"},
+  {c:"有",p:"yǒu",m:"có",cat:"Động từ"},
+  {c:"去",p:"qù",m:"đi",cat:"Động từ"},
+  {c:"来",p:"lái",m:"đến",cat:"Động từ"},
+  {c:"吃",p:"chī",m:"ăn",cat:"Động từ"},
+  {c:"喝",p:"hē",m:"uống",cat:"Động từ"},
+  {c:"看",p:"kàn",m:"xem, nhìn",cat:"Động từ"},
+  {c:"说",p:"shuō",m:"nói",cat:"Động từ"},
+  {c:"听",p:"tīng",m:"nghe",cat:"Động từ"},
+  {c:"写",p:"xiě",m:"viết",cat:"Động từ"},
+  {c:"学习",p:"xuéxí",m:"học",cat:"Động từ"},
+  {c:"爱",p:"ài",m:"yêu",cat:"Động từ"},
+  {c:"喜欢",p:"xǐhuan",m:"thích",cat:"Động từ"},
+  {c:"想",p:"xiǎng",m:"muốn, nghĩ",cat:"Động từ"},
+
+  // Tính từ
+  {c:"好",p:"hǎo",m:"tốt, đẹp",cat:"Tính từ"},
+  {c:"大",p:"dà",m:"to, lớn",cat:"Tính từ"},
+  {c:"小",p:"xiǎo",m:"nhỏ",cat:"Tính từ"},
+  {c:"多",p:"duō",m:"nhiều",cat:"Tính từ"},
+  {c:"少",p:"shǎo",m:"ít",cat:"Tính từ"},
+  {c:"高",p:"gāo",m:"cao",cat:"Tính từ"},
+  {c:"漂亮",p:"piàoliang",m:"xinh đẹp",cat:"Tính từ"},
+  {c:"忙",p:"máng",m:"bận",cat:"Tính từ"},
+];
+VOCAB.forEach((w,i)=>w.id=i);
+
+const CATS = [...new Set(VOCAB.map(w=>w.cat))];
+const ALL_LABEL = "Tất cả";
+
+const store = {
+  key:"hoctiengtrung_known_v1",
+  get(){ try{return JSON.parse(localStorage.getItem(this.key))||{};}catch(e){return {};} },
+  set(obj){ localStorage.setItem(this.key, JSON.stringify(obj)); },
+  isKnown(id){ return !!this.get()[id]; },
+  setKnown(id, val){ const o=this.get(); if(val) o[id]=true; else delete o[id]; this.set(o); }
+};
+
+// ---- Tabs ----
+document.querySelectorAll("nav button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+
+function buildCatButtons(container, onChange, includeAll=true){
+  container.innerHTML = "";
+  const labels = includeAll ? [ALL_LABEL, ...CATS] : [...CATS];
+  let current = labels[0];
+  labels.forEach(label=>{
+    const b = document.createElement("button");
+    b.textContent = label;
+    if(label===current) b.classList.add("active");
+    b.addEventListener("click", ()=>{
+      container.querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      current = label;
+      onChange(label);
+    });
+    container.appendChild(b);
+  });
+  return { get:()=>current };
+}
+function wordsFor(cat){ return cat===ALL_LABEL ? VOCAB : VOCAB.filter(w=>w.cat===cat); }
+
+// ---- VOCAB TAB ----
+const vocabGrid = document.getElementById("vocabGrid");
+function renderVocab(cat){
+  vocabGrid.innerHTML = "";
+  wordsFor(cat).forEach(w=>{
+    const card = document.createElement("div");
+    card.className = "word-card";
+    const known = store.isKnown(w.id);
+    card.innerHTML = `
+      <span class="star ${known?"on":""}" data-id="${w.id}">★</span>
+      <div class="hanzi">${w.c}</div>
+      <div class="pinyin">${w.p}</div>
+      <div class="meaning">${w.m}</div>`;
+    card.querySelector(".star").addEventListener("click", (e)=>{
+      const nowKnown = !store.isKnown(w.id);
+      store.setKnown(w.id, nowKnown);
+      e.target.classList.toggle("on", nowKnown);
+    });
+    vocabGrid.appendChild(card);
+  });
+}
+buildCatButtons(document.getElementById("vocabCats"), renderVocab);
+renderVocab(ALL_LABEL);
+
+// ---- FLASHCARDS TAB ----
+let fcQueue = [], fcCurrent = null;
+const fcCardEl = document.getElementById("fcCard");
+const fcBar = document.getElementById("fcBar");
+const fcCounter = document.getElementById("fcCounter");
+const fcDoneWrap = document.getElementById("fcDoneWrap");
+
+function startFlash(cat){
+  const words = wordsFor(cat);
+  fcQueue = words.filter(w=>!store.isKnown(w.id));
+  fcCardEl.style.display = "";
+  document.querySelector(".fc-actions").style.display = "flex";
+  fcDoneWrap.innerHTML = "";
+  nextFlash(words.length);
+}
+function updateFcProgress(total){
+  const known = wordsFor(fcCatState.get()).filter(w=>store.isKnown(w.id)).length;
+  fcBar.style.width = total ? (known/total*100)+"%" : "0%";
+  fcCounter.textContent = `Đã thuộc: ${known}/${total}`;
+}
+function nextFlash(total){
+  updateFcProgress(total);
+  if(fcQueue.length === 0){
+    fcCardEl.style.display = "none";
+    document.querySelector(".fc-actions").style.display = "none";
+    fcDoneWrap.innerHTML = `<div class="fc-done">🎉 Bạn đã ôn hết chủ đề này!</div>`;
+    return;
+  }
+  fcCurrent = fcQueue[Math.floor(Math.random()*fcQueue.length)];
+  fcCardEl.classList.remove("flipped");
+  document.getElementById("fcHanzi").textContent = fcCurrent.c;
+  document.getElementById("fcMeaning").textContent = fcCurrent.m;
+  document.getElementById("fcPinyin").textContent = fcCurrent.p;
+  document.getElementById("fcHanziSmall").textContent = fcCurrent.c;
+}
+fcCardEl.addEventListener("click", ()=> fcCardEl.classList.toggle("flipped"));
+document.getElementById("fcYes").addEventListener("click", ()=>{
+  if(!fcCurrent) return;
+  store.setKnown(fcCurrent.id, true);
+  fcQueue = fcQueue.filter(w=>w.id!==fcCurrent.id);
+  nextFlash(wordsFor(fcCatState.get()).length);
+});
+document.getElementById("fcNo").addEventListener("click", ()=>{
+  if(!fcCurrent) return;
+  store.setKnown(fcCurrent.id, false);
+  nextFlash(wordsFor(fcCatState.get()).length);
+});
+document.getElementById("fcReset").addEventListener("click", ()=>{
+  const o = store.get();
+  wordsFor(fcCatState.get()).forEach(w=>delete o[w.id]);
+  store.set(o);
+  startFlash(fcCatState.get());
+});
+const fcCatState = buildCatButtons(document.getElementById("flashCats"), startFlash);
+startFlash(ALL_LABEL);
+
+// ---- QUIZ TAB ----
+const quizArea = document.getElementById("quizArea");
+let quizWords = [], quizIndex = 0, quizScore = 0, quizOrder = [];
+
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function startQuiz(cat){
+  const words = wordsFor(cat);
+  if(words.length < 4){
+    quizArea.innerHTML = `<div class="quiz-start">Chủ đề này cần ít nhất 4 từ để làm trắc nghiệm.</div>`;
+    return;
+  }
+  quizWords = words;
+  quizArea.innerHTML = `<div class="quiz-start">
+    <div>Sẵn sàng kiểm tra <b>${words.length}</b> từ chủ đề "<b>${cat}</b>"?</div>
+    <button id="quizGo">Bắt đầu trắc nghiệm</button>
+  </div>`;
+  document.getElementById("quizGo").addEventListener("click", ()=>{
+    quizOrder = shuffle(words).slice(0, Math.min(10, words.length));
+    quizIndex = 0; quizScore = 0;
+    renderQuizQuestion();
+  });
+}
+function renderQuizQuestion(){
+  if(quizIndex >= quizOrder.length){
+    quizArea.innerHTML = `<div class="qz-result">
+      <div>Kết quả của bạn</div>
+      <div class="big">${quizScore}/${quizOrder.length}</div>
+      <button class="qz-restart" id="qzRestart">Làm lại</button>
+    </div>`;
+    document.getElementById("qzRestart").addEventListener("click", ()=>startQuiz(quizCatState.get()));
+    return;
+  }
+  const word = quizOrder[quizIndex];
+  const distractors = shuffle(quizWords.filter(w=>w.id!==word.id)).slice(0,3);
+  const choices = shuffle([word, ...distractors]);
+  quizArea.innerHTML = `
+    <div class="qz-score">Câu ${quizIndex+1}/${quizOrder.length} · Điểm: ${quizScore}</div>
+    <div class="qz-q">
+      <div class="hanzi">${word.c}</div>
+      <div class="pinyin">${word.p}</div>
+    </div>
+    <div class="qz-choices" id="qzChoices"></div>`;
+  const choicesEl = document.getElementById("qzChoices");
+  choices.forEach(ch=>{
+    const b = document.createElement("button");
+    b.textContent = ch.m;
+    b.addEventListener("click", ()=>{
+      const buttons = choicesEl.querySelectorAll("button");
+      buttons.forEach(x=>x.disabled = true);
+      if(ch.id === word.id){
+        b.classList.add("correct");
+        quizScore++;
+      } else {
+        b.classList.add("wrong");
+        buttons.forEach(x=>{ if(x.textContent===word.m) x.classList.add("correct"); });
+      }
+      const next = document.createElement("button");
+      next.className = "qz-next";
+      next.textContent = quizIndex+1 < quizOrder.length ? "Câu tiếp theo →" : "Xem kết quả →";
+      next.addEventListener("click", ()=>{ quizIndex++; renderQuizQuestion(); });
+      quizArea.appendChild(next);
+    });
+    choicesEl.appendChild(b);
+  });
+}
+const quizCatState = buildCatButtons(document.getElementById("quizCats"), startQuiz);
+startQuiz(ALL_LABEL);
+
+// ---- WRITING TAB ----
+let writeWords = [], writeIdx = 0;
+const wCanvas = document.getElementById("wCanvas");
+const wCtx = wCanvas.getContext("2d");
+wCtx.lineWidth = 6; wCtx.lineCap = "round"; wCtx.strokeStyle = "#a8232a";
+let drawing = false, lastX=0, lastY=0;
+
+function canvasPos(e){
+  const rect = wCanvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+wCanvas.addEventListener("pointerdown", e=>{
+  drawing = true;
+  const p = canvasPos(e); lastX=p.x; lastY=p.y;
+});
+wCanvas.addEventListener("pointermove", e=>{
+  if(!drawing) return;
+  const p = canvasPos(e);
+  wCtx.beginPath(); wCtx.moveTo(lastX,lastY); wCtx.lineTo(p.x,p.y); wCtx.stroke();
+  lastX=p.x; lastY=p.y;
+});
+["pointerup","pointerleave","pointercancel"].forEach(ev=>
+  wCanvas.addEventListener(ev, ()=> drawing=false));
+document.getElementById("wClear").addEventListener("click", ()=>{
+  wCtx.clearRect(0,0,wCanvas.width,wCanvas.height);
+});
+
+function startWrite(cat){
+  writeWords = shuffle(wordsFor(cat));
+  writeIdx = 0;
+  showWriteWord();
+}
+function showWriteWord(){
+  if(writeWords.length===0) return;
+  if(writeIdx >= writeWords.length) writeIdx = 0;
+  const w = writeWords[writeIdx];
+  document.getElementById("wHanzi").textContent = w.c;
+  document.getElementById("wPinyin").textContent = w.p;
+  document.getElementById("wMeaning").textContent = w.m;
+  wCtx.clearRect(0,0,wCanvas.width,wCanvas.height);
+}
+document.getElementById("wNext").addEventListener("click", ()=>{
+  writeIdx++; showWriteWord();
+});
+buildCatButtons(document.getElementById("writeCats"), startWrite);
+startWrite(ALL_LABEL);
+</script>
+</body>
+</html>

@@ -128,6 +128,34 @@
   .btn-next{background:var(--red);color:#fff;}
   .write-feedback{min-height:20px;font-size:14px;color:var(--green);font-weight:600;text-align:center;}
 
+  /* Stroke order rules guide */
+  .rules-guide{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;margin-bottom:18px;box-shadow:var(--shadow);}
+  .rules-guide summary{cursor:pointer;font-weight:700;color:var(--red-dark);}
+  .rules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px;}
+  .rule-card{display:flex;align-items:center;gap:10px;background:var(--paper);
+    border:1px solid var(--line);border-radius:10px;padding:8px;}
+  .rule-demo{width:80px;height:80px;flex-shrink:0;background:#fff;border:1px solid var(--line);border-radius:8px;}
+  .rule-text{font-size:12.5px;color:var(--ink);line-height:1.4;}
+  .rule-cn{color:var(--muted);}
+
+  /* Conversation practice */
+  .convo-toggle{display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:14px;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--muted);}
+  .convo-toggle button{background:var(--gold);color:#fff;border:none;padding:8px 16px;
+    border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;}
+  .convo-box{display:flex;flex-direction:column;gap:10px;}
+  .convo-line{max-width:82%;padding:10px 14px;border-radius:14px;box-shadow:var(--shadow);}
+  .convo-line.a{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px;}
+  .convo-line.b{align-self:flex-end;background:#fdece9;border:1px solid #f3d3cd;border-bottom-right-radius:4px;}
+  .convo-line.playing{outline:2px solid var(--gold);}
+  .convo-line .who{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px;}
+  .convo-body{display:flex;align-items:flex-start;gap:8px;}
+  .convo-body .hanzi{font-size:20px;}
+  .convo-body .pinyin{color:var(--red);font-size:13px;margin-top:4px;font-weight:600;}
+  .convo-body .meaning{color:var(--muted);font-size:13px;margin-top:2px;}
+  .convo-box.hide-meaning .pinyin, .convo-box.hide-meaning .meaning{display:none;}
+
   footer{text-align:center;color:var(--muted);font-size:12px;padding:20px;}
 </style>
 </head>
@@ -136,13 +164,14 @@
 <header>
   <div class="streak-badge" id="streakBadge"></div>
   <h1><span class="hanzi">学中文</span>Học Tiếng Trung Cơ Bản</h1>
-  <p>Từ vựng · chữ Hán · pinyin · phát âm · luyện viết · trắc nghiệm</p>
+  <p>Từ vựng · chữ Hán · pinyin · phát âm · hội thoại · luyện viết · trắc nghiệm</p>
 </header>
 
 <nav>
   <button data-tab="vocab" class="active">📖 Từ vựng</button>
   <button data-tab="flash">🃏 Thẻ ghi nhớ</button>
   <button data-tab="quiz">📝 Trắc nghiệm</button>
+  <button data-tab="convo">💬 Hội thoại</button>
   <button data-tab="write">✍️ Luyện viết</button>
 </nav>
 
@@ -191,8 +220,22 @@
     <div id="quizArea"></div>
   </section>
 
+  <!-- CONVERSATION -->
+  <section id="convo" class="panel">
+    <div class="cats" id="convoCats"></div>
+    <div class="convo-toggle">
+      <label><input type="checkbox" id="convoHideMeaning"> Ẩn nghĩa để tự luyện nghe-hiểu</label>
+      <button id="convoPlayAll">🔊 Nghe cả bài</button>
+    </div>
+    <div class="convo-box" id="convoBox"></div>
+  </section>
+
   <!-- WRITING -->
   <section id="write" class="panel">
+    <details class="rules-guide" open>
+      <summary>📐 Quy tắc viết chữ Hán cơ bản (bấm để ẩn/hiện)</summary>
+      <div class="rules-grid" id="rulesGrid"></div>
+    </details>
     <div class="cats" id="writeCats"></div>
     <div class="hint">Bấm "Xem thứ tự nét" để xem cách viết, rồi bấm "Kiểm tra viết" để tự viết và được chấm điểm</div>
     <div class="write-wrap">
@@ -380,6 +423,65 @@ const VOCAB = [
   {c:"忙",p:"máng",m:"bận",cat:"Tính từ"},
 ];
 VOCAB.forEach((w,i)=>w.id=i);
+
+const DIALOGUES = [
+  {title:"Chào hỏi", lines:[
+    {who:"A", c:"你好！", p:"Nǐ hǎo!", m:"Xin chào!"},
+    {who:"B", c:"你好！你好吗？", p:"Nǐ hǎo! Nǐ hǎo ma?", m:"Chào bạn! Bạn khỏe không?"},
+    {who:"A", c:"我很好，谢谢。你呢？", p:"Wǒ hěn hǎo, xièxie. Nǐ ne?", m:"Tôi khỏe, cảm ơn. Còn bạn?"},
+    {who:"B", c:"我也很好。", p:"Wǒ yě hěn hǎo.", m:"Tôi cũng khỏe."},
+  ]},
+  {title:"Hỏi tên", lines:[
+    {who:"A", c:"你叫什么名字？", p:"Nǐ jiào shénme míngzi?", m:"Bạn tên là gì?"},
+    {who:"B", c:"我叫小明。你呢？", p:"Wǒ jiào Xiǎomíng. Nǐ ne?", m:"Tôi tên là Tiểu Minh. Còn bạn?"},
+    {who:"A", c:"我叫玛丽。", p:"Wǒ jiào Mǎlì.", m:"Tôi tên là Mary."},
+    {who:"B", c:"认识你很高兴。", p:"Rènshi nǐ hěn gāoxìng.", m:"Rất vui được quen bạn."},
+  ]},
+  {title:"Bạn từ đâu đến", lines:[
+    {who:"A", c:"你是哪国人？", p:"Nǐ shì nǎ guó rén?", m:"Bạn là người nước nào?"},
+    {who:"B", c:"我是越南人。你呢？", p:"Wǒ shì Yuènán rén. Nǐ ne?", m:"Tôi là người Việt Nam. Còn bạn?"},
+    {who:"A", c:"我是中国人。", p:"Wǒ shì Zhōngguó rén.", m:"Tôi là người Trung Quốc."},
+  ]},
+  {title:"Gia đình", lines:[
+    {who:"A", c:"你家有几口人？", p:"Nǐ jiā yǒu jǐ kǒu rén?", m:"Nhà bạn có mấy người?"},
+    {who:"B", c:"我家有四口人：爸爸、妈妈、姐姐和我。", p:"Wǒ jiā yǒu sì kǒu rén: bàba, māma, jiějie hé wǒ.", m:"Nhà tôi có 4 người: bố, mẹ, chị gái và tôi."},
+    {who:"A", c:"你有兄弟姐妹吗？", p:"Nǐ yǒu xiōngdì jiěmèi ma?", m:"Bạn có anh chị em không?"},
+    {who:"B", c:"有，我有一个姐姐。", p:"Yǒu, wǒ yǒu yí gè jiějie.", m:"Có, tôi có một chị gái."},
+  ]},
+  {title:"Hỏi giờ", lines:[
+    {who:"A", c:"现在几点？", p:"Xiànzài jǐ diǎn?", m:"Bây giờ mấy giờ?"},
+    {who:"B", c:"现在三点。", p:"Xiànzài sān diǎn.", m:"Bây giờ 3 giờ."},
+    {who:"A", c:"谢谢。", p:"Xièxie.", m:"Cảm ơn."},
+    {who:"B", c:"不客气。", p:"Bú kèqi.", m:"Không có gì."},
+  ]},
+  {title:"Mua hàng", lines:[
+    {who:"A", c:"这个多少钱？", p:"Zhège duōshao qián?", m:"Cái này bao nhiêu tiền?"},
+    {who:"B", c:"十块钱。", p:"Shí kuài qián.", m:"10 tệ."},
+    {who:"A", c:"太贵了，便宜一点吧。", p:"Tài guì le, piányi yìdiǎn ba.", m:"Đắt quá, bớt chút đi."},
+    {who:"B", c:"好吧，八块钱。", p:"Hǎo ba, bā kuài qián.", m:"Được rồi, 8 tệ."},
+  ]},
+  {title:"Gọi món", lines:[
+    {who:"A", c:"你想吃什么？", p:"Nǐ xiǎng chī shénme?", m:"Bạn muốn ăn gì?"},
+    {who:"B", c:"我想吃米饭。你呢？", p:"Wǒ xiǎng chī mǐfàn. Nǐ ne?", m:"Tôi muốn ăn cơm. Còn bạn?"},
+    {who:"A", c:"我想喝咖啡。", p:"Wǒ xiǎng hē kāfēi.", m:"Tôi muốn uống cà phê."},
+    {who:"B", c:"好的，服务员！", p:"Hǎo de, fúwùyuán!", m:"Được rồi, phục vụ ơi!"},
+  ]},
+  {title:"Tạm biệt", lines:[
+    {who:"A", c:"我要走了，再见！", p:"Wǒ yào zǒu le, zàijiàn!", m:"Tôi phải đi rồi, tạm biệt!"},
+    {who:"B", c:"再见！明天见。", p:"Zàijiàn! Míngtiān jiàn.", m:"Tạm biệt! Hẹn gặp ngày mai."},
+    {who:"A", c:"好，明天见！", p:"Hǎo, míngtiān jiàn!", m:"Được, hẹn gặp ngày mai!"},
+  ]},
+];
+
+const STROKE_RULES = [
+  {n:"Ngang trước, sổ sau", cn:"先横后竖", ex:"十"},
+  {n:"Phẩy trước, mác sau", cn:"先撇后捺", ex:"人"},
+  {n:"Trên trước, dưới sau", cn:"从上到下", ex:"三"},
+  {n:"Trái trước, phải sau", cn:"从左到右", ex:"川"},
+  {n:"Ngoài trước, trong sau", cn:"先外后内", ex:"月"},
+  {n:"Giữa trước, hai bên sau", cn:"先中间后两边", ex:"小"},
+  {n:"Vào trong trước, đóng khung sau", cn:"先里头后封口", ex:"国"},
+];
 
 const CATS = [...new Set(VOCAB.map(w=>w.cat))];
 const ALL_LABEL = "Tất cả";
@@ -662,6 +764,89 @@ document.getElementById("wNext").addEventListener("click", ()=>{
 });
 buildCatButtons(document.getElementById("writeCats"), startWrite);
 startWrite(ALL_LABEL);
+
+// ---- STROKE ORDER RULES GUIDE ----
+function renderRules(){
+  const grid = document.getElementById("rulesGrid");
+  grid.innerHTML = "";
+  STROKE_RULES.forEach((r,i)=>{
+    const card = document.createElement("div");
+    card.className = "rule-card";
+    const demoId = "rule-demo-" + i;
+    card.innerHTML = `
+      <div class="rule-demo" id="${demoId}"></div>
+      <div class="rule-text"><b>${i+1}. ${r.n}</b><br><span class="rule-cn">${r.cn}</span><br>Ví dụ: ${r.ex}</div>`;
+    grid.appendChild(card);
+    const writer = HanziWriter.create(demoId, r.ex, {
+      width: 80, height: 80, padding: 4,
+      showOutline: true, strokeColor: "#a8232a", outlineColor: "#eadfcd",
+      strokeAnimationSpeed: 1, delayBetweenStrokes: 250
+    });
+    (function loop(){ writer.animateCharacter({ onComplete: ()=> setTimeout(loop, 1400) }); })();
+  });
+}
+renderRules();
+
+// ---- CONVERSATION TAB ----
+let currentDialogue = null;
+function renderDialogue(dialogue){
+  currentDialogue = dialogue;
+  const box = document.getElementById("convoBox");
+  box.innerHTML = "";
+  dialogue.lines.forEach(line=>{
+    const div = document.createElement("div");
+    div.className = "convo-line " + (line.who === "A" ? "a" : "b");
+    div.innerHTML = `
+      <div class="who">${line.who}</div>
+      <div class="convo-body">
+        <button class="speak-btn">🔊</button>
+        <div>
+          <div class="hanzi">${line.c}</div>
+          <div class="pinyin">${line.p}</div>
+          <div class="meaning">${line.m}</div>
+        </div>
+      </div>`;
+    div.querySelector(".speak-btn").addEventListener("click", ()=> speak(line.c));
+    box.appendChild(div);
+  });
+}
+function startConvo(){
+  const container = document.getElementById("convoCats");
+  container.innerHTML = "";
+  DIALOGUES.forEach((d,i)=>{
+    const b = document.createElement("button");
+    b.textContent = d.title;
+    if(i===0) b.classList.add("active");
+    b.addEventListener("click", ()=>{
+      container.querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      renderDialogue(d);
+    });
+    container.appendChild(b);
+  });
+  renderDialogue(DIALOGUES[0]);
+}
+document.getElementById("convoHideMeaning").addEventListener("change", (e)=>{
+  document.getElementById("convoBox").classList.toggle("hide-meaning", e.target.checked);
+});
+document.getElementById("convoPlayAll").addEventListener("click", ()=>{
+  if(!("speechSynthesis" in window) || !currentDialogue) return;
+  speechSynthesis.cancel();
+  const lineEls = document.querySelectorAll("#convoBox .convo-line");
+  const texts = currentDialogue.lines.map(l=>l.c);
+  let i = 0;
+  function next(){
+    lineEls.forEach(el=>el.classList.remove("playing"));
+    if(i >= texts.length) return;
+    lineEls[i].classList.add("playing");
+    const utter = new SpeechSynthesisUtterance(texts[i]);
+    utter.lang = "zh-CN"; utter.rate = 0.8;
+    utter.onend = ()=>{ i++; next(); };
+    speechSynthesis.speak(utter);
+  }
+  next();
+});
+startConvo();
 </script>
 </body>
 </html>

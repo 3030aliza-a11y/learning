@@ -256,6 +256,11 @@
   .p90-hw{width:220px;height:220px;margin:0 auto;border:2px dashed var(--line);border-radius:12px;background:#fff}
   .p90-say{text-align:center;background:var(--paper);border-radius:12px;padding:12px;line-height:1.6}
   .p90-jump{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:12px}.p90-jump .p90-btn{padding:14px 8px;font-size:15px;font-weight:700}
+  .p90-sub{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 8px;font-size:13px;color:var(--muted)}
+  .p90-sub button{border:1px solid var(--line);background:#eee;border-radius:20px;padding:6px 10px;font-size:13px;color:var(--muted)}
+  .p90-sub button.on{background:#fff;color:var(--ink);border-color:var(--gold)}
+  #p90DlgBox.hide-hz .p90-dl:not(.reveal) .s-hz,#p90DlgBox.hide-py .p90-dl:not(.reveal) .s-py,#p90DlgBox.hide-vi .p90-dl:not(.reveal) .s-vi{filter:blur(7px);background:#eadfcd;border-radius:4px;user-select:none}
+  .p90-dl>div{cursor:pointer}.p90-dl.playing{background:#fff4e0;border-radius:8px}
   .p90-songt{text-align:center;background:var(--paper);border-radius:12px;padding:10px;line-height:1.6}
   .p90-yt{display:block;text-align:center;text-decoration:none;margin-top:10px}
   .p90-grid .full{background:var(--green);color:#fff}.p90-grid .half{background:#f6e3b4}.p90-grid .cur{outline:2px solid var(--red)}
@@ -1744,7 +1749,10 @@ function renderPlan90(){
     ${D.sent.map(s=>`<div class="p90-s"><div><b>${s[0]}</b><br>${s[1]}<br><small>${s[2]}</small></div><button class="speak-btn" data-say="${s[0]}">🔊</button><button class="speak-btn slow" data-say="${s[0]}" data-slow="1">🐢</button></div>`).join("")}
     ${(!D.final&&D.dt===0)?`<p><small>📐 Ngữ pháp tuần: ${D.W.f}</small></p>`:""}
     <h4 style="margin-top:14px">💬 Hội thoại ngày ${idx+1} <button class="speak-btn" id="p90DlgAll">▶ Nghe cả đoạn</button></h4>
-    ${p90Dlg(idx).map((l,k)=>`<div class="p90-s"><div><b>${k%2?"B":"A"}: ${l[0]}</b><br>${l[1]}<br><small>${l[2]}</small></div><button class="speak-btn" data-say="${l[0]}">🔊</button><button class="speak-btn slow" data-say="${l[0]}" data-slow="1">🐢</button></div>`).join("")}
+    <div class="p90-sub"><span>Phụ đề:</span>${[["hz","汉 Chữ Hán"],["py","Pinyin"],["vi","Nghĩa"]].map(([k,l])=>`<button data-sub="${k}" class="${p90Sub()[k]?"":"on"}">${p90Sub()[k]?"🙈":"👁"} ${l}</button>`).join("")}</div>
+    <div id="p90DlgBox" class="${Object.entries(p90Sub()).filter(e=>e[1]).map(e=>"hide-"+e[0]).join(" ")}">
+    ${p90Dlg(idx).map((l,k)=>`<div class="p90-s p90-dl" data-line="${k}"><div><b>${k%2?"B":"A"}: <span class="s-hz">${l[0]}</span></b><br><span class="s-py">${l[1]}</span><br><small class="s-vi">${l[2]}</small></div><button class="speak-btn" data-say="${l[0]}">🔊</button><button class="speak-btn slow" data-say="${l[0]}" data-slow="1">🐢</button></div>`).join("")}
+    </div><p><small>💡 Tắt phụ đề → nghe → đoán → chạm vào câu để xem đáp án.</small></p>
   </div>
   <div class="p90-card" id="p90ExCard"><h4>🏋️ Bài tập hôm nay</h4>
     <div class="p90-extabs">${[["nghe","🎧 Nghe"],["doc","📖 Đọc"],["viet","✍️ Viết"],["noi","🎤 Nói"]].map(([k,l])=>`<button data-ex="${k}" class="${k===p90Ex?"on":""}">${l}${p90ExDone(idx,k)?" ✓":""}</button>`).join("")}</div>
@@ -1781,9 +1789,13 @@ function renderPlan90(){
   document.getElementById("p90Next").onclick=()=>{p90View=idx+1;renderPlan90();};
   document.getElementById("p90Note").onchange=e=>{const x=p90Load();x.notes=x.notes||{};x.notes[idx]=e.target.value;p90Save(x);};
   document.getElementById("p90Start").onchange=e=>{if(!e.target.value)return;if(!confirm("Đổi ngày bắt đầu?"))return renderPlan90();const x=p90Load();x.start=e.target.value;p90Save(x);p90View=null;renderPlan90();};
+  box.querySelectorAll("[data-sub]").forEach(b=>b.onclick=()=>{const s=p90Sub();s[b.dataset.sub]=!s[b.dataset.sub];try{localStorage.setItem("p90_sub",JSON.stringify(s));}catch(e){}
+    const on=!s[b.dataset.sub];b.classList.toggle("on",on);b.textContent=(on?"👁 ":"🙈 ")+b.textContent.slice(3);
+    document.getElementById("p90DlgBox").classList.toggle("hide-"+b.dataset.sub,!on);box.querySelectorAll(".p90-dl").forEach(x=>x.classList.remove("reveal"));});
+  box.querySelectorAll(".p90-dl>div").forEach(d=>d.onclick=()=>d.parentElement.classList.toggle("reveal"));
   const allBtn=document.getElementById("p90DlgAll");
   allBtn.onclick=()=>{if(allBtn.dataset.on){speechSynthesis.cancel();delete allBtn.dataset.on;allBtn.textContent="▶ Nghe cả đoạn";return;}
-    allBtn.dataset.on=1;allBtn.textContent="⏹ Dừng";const L=p90Dlg(idx);let k=0;const nx=()=>{if(!allBtn.dataset.on)return;if(k>=L.length){delete allBtn.dataset.on;allBtn.textContent="▶ Nghe cả đoạn";return;}const u=new SpeechSynthesisUtterance(L[k][0]);u.lang="zh-CN";u.rate=0.65;u.onend=()=>{k++;setTimeout(nx,500);};speechSynthesis.speak(u);};speechSynthesis.cancel();nx();};
+    allBtn.dataset.on=1;allBtn.textContent="⏹ Dừng";const L=p90Dlg(idx);let k=0;const nx=()=>{if(!allBtn.dataset.on)return;if(k>=L.length){delete allBtn.dataset.on;allBtn.textContent="▶ Nghe cả đoạn";return;}box.querySelectorAll(".p90-dl").forEach((x,j)=>x.classList.toggle("playing",j===k));const u=new SpeechSynthesisUtterance(L[k][0]);u.lang="zh-CN";u.rate=0.65;u.onend=()=>{box.querySelectorAll(".p90-dl").forEach(x=>x.classList.remove("playing"));k++;setTimeout(nx,500);};speechSynthesis.speak(u);};speechSynthesis.cancel();nx();};
   box.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{p90Ex=b.dataset.ex;box.querySelectorAll("[data-ex]").forEach(x=>x.classList.toggle("on",x===b));p90RunEx(D,idx);});
   p90RunEx(D,idx);
 }
@@ -1890,6 +1902,7 @@ const P90_SONGS=[
 ["小幸运","Xiǎo xìngyùn – Hạnh phúc nhỏ","Điền Phức Chân","Nhạc phim nổi tiếng, giọng nữ trong, luyện nghe câu dài.",[["幸运","xìngyùn","may mắn"],["遇见","yùjiàn","gặp gỡ"],["青春","qīngchūn","thanh xuân"]],4],
 ["后来","Hòulái – Về sau","Lưu Nhược Anh","Bài karaoke kinh điển; tổng ôn — nghe hiểu ý chính cả bài.",[["后来","hòulái","về sau"],["终于","zhōngyú","cuối cùng"],["珍惜","zhēnxī","trân trọng"]],4]
 ];
+function p90Sub(){try{return JSON.parse(localStorage.getItem("p90_sub"))||{};}catch(e){return {};}}
 /* ===== PHIM LUYỆN NGHE (dễ → khó) ===== */
 const P90_FILMS=[
 ["小猪佩奇","Heo Peppa (Peppa Pig)","Hoạt hình · 5 phút/tập","Câu cực ngắn, nói chậm, toàn từ đời thường. Xem 2 tập/ngày.",1,"小猪佩奇 中文 拼音字幕"],

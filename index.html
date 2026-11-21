@@ -266,6 +266,10 @@
   .p90-tip{background:#fffaf0;border-radius:10px;padding:10px;font-size:14px;line-height:1.55;margin:6px 0}
   .p90-tc{margin-top:10px}.p90-tcr{display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:6px 10px;margin-bottom:6px;text-align:left}
   .p90-tcr .p90-ct{margin:0}
+  .p90-opts .sel{border:3px solid #2b7bd1;background:#eef5ff}
+  .p90-opts button{position:relative}.p90-ear{position:absolute;top:4px;right:6px;font-size:11px;opacity:.5}
+  .p90-check{min-width:60%;padding:14px;font-size:16px;font-weight:700}.p90-check:disabled{opacity:.4}
+  .p90-hint{text-align:center;margin:8px 0}
   .p90-exnav{border-top:1px dashed var(--line);padding-top:10px;margin-top:14px}.p90-exnav .p90-btn{flex:1;padding:12px}
   .p90-guide{background:#f3f8ff;border-left:4px solid #2b7bd1;border-radius:8px;padding:10px;margin-bottom:12px;font-size:14px;line-height:1.5}
   .p90-month{margin:14px 0 6px;font-weight:700;color:var(--red);font-size:14px}
@@ -2037,17 +2041,35 @@ function p90Choice(D,idx,ex){
     box.innerHTML=`<div class="p90-prog"><i style="width:${n/qs.length*100}%"></i></div>
       <p class="p90-q"><small>Câu ${n+1}/${qs.length} · đúng ${score}</small><br><b>${q.t}</b><br>
       ${q.say&&q.big?`<span class="p90-big">${q.big}</span><br>`:""}${q.say?`<button class="p90-btn" id="p90Play">🔊 Nghe</button> <button class="p90-btn" id="p90PlayS">🐢 Chậm</button>`:`<span class="${q.sm?"p90-hz2":"p90-big"}">${q.big}</span>${q.py?`<br><span class="p90-py">${q.py}</span>`:""}`}</p>
-      <div class="p90-opts">${q.opts.map((o,k)=>`<button data-o="${k}">${q.lab(o)}</button>`).join("")}</div>`;
+      <div class="p90-opts">${q.opts.map((o,k)=>`<button data-o="${k}">${q.lab(o)}${p90Snd(o)?'<span class="p90-ear">🔊</span>':""}</button>`).join("")}</div>
+      <div class="p90-row"><button class="p90-btn main p90-check" id="p90Check" disabled>Kiểm tra ✓</button></div>
+      <p class="p90-hint"><small>${p90Snd(q.opts[0])?"Chạm vào từng ô để nghe thử, chọn ô đúng rồi bấm Kiểm tra.":"Chọn 1 ô rồi bấm Kiểm tra."}</small></p>`;
     if(q.say){const p=()=>speak(q.say,0.72);p();document.getElementById("p90Play").onclick=p;document.getElementById("p90PlayS").onclick=()=>speak(q.say,0.4);}
+    let sel=-1;const chk=document.getElementById("p90Check");
     box.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{
-      const right=q.opts[+b.dataset.o]===q.ans; if(right)score++;
-      box.querySelectorAll("[data-o]").forEach(x=>{x.disabled=true;if(q.opts[+x.dataset.o]===q.ans)x.classList.add("right");});
-      if(!right)b.classList.add("wrong");
-      box.insertAdjacentHTML("beforeend",`<p class="p90-fb">${q.fb||`<b>${q.ans[0]}</b> · ${q.ans[1]} · ${q.ans[2]}`}</p>`);
-      if(!q.say&&!q.fb)speak(q.ans[0],0.72);
-      setTimeout(()=>{n++;step();},right?1000:2200);
+      if(chk.dataset.done)return;
+      sel=+b.dataset.o;box.querySelectorAll("[data-o]").forEach(x=>x.classList.toggle("sel",x===b));chk.disabled=false;
+      const s=p90Snd(q.opts[sel]);if(s)speak(s,0.72);
     });
+    chk.onclick=()=>{
+      if(chk.dataset.done){n++;step();return;}
+      if(sel<0)return;chk.dataset.done=1;
+      const right=q.opts[sel]===q.ans; if(right)score++;
+      box.querySelectorAll("[data-o]").forEach(x=>{x.classList.remove("sel");if(q.opts[+x.dataset.o]===q.ans)x.classList.add("right");});
+      if(!right)box.querySelector(`[data-o="${sel}"]`).classList.add("wrong");
+      box.querySelector(".p90-hint").innerHTML=`<div class="p90-res ${right?"good":""}">${right?"✅ Đúng!":"❌ Chưa đúng."} ${q.fb||`<b>${q.ans[0]}</b> · ${q.ans[1]} · ${q.ans[2]}`}</div>`;
+      if(q.say)speak(q.say,0.72);else if(!q.fb)speak(q.ans[0],0.72);
+      chk.textContent=n+1<qs.length?"Câu tiếp ▶":"Xem kết quả ▶";
+    };
   };step();
+}
+/* âm thanh cho từng đáp án (nếu có) */
+const P90_TREF=["吗","妈","麻","马","骂"];
+function p90Snd(o){
+  if(typeof o[3]==="number")return P90_TREF[o[3]];
+  if(/^[\u4e00-\u9fff！？，。、]+$/.test(o[0]))return o[0];
+  if(o[1]&&!o[2]){const s=p90Syls(o[1]);if(s.length===1)return P90_TREF[s[0].tone];}
+  return null;
 }
 /* Ghép câu: chạm các mảnh theo đúng thứ tự */
 function p90Order(D,idx,done){

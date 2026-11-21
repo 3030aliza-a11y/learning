@@ -1769,6 +1769,10 @@ function renderPlan90(){
   <div class="p90-card" id="p90ExCard"><h4>🏋️ Bài tập hôm nay</h4>
     <div class="p90-extabs">${[["nghe","🎧 Nghe"],["doc","📖 Đọc"],["viet","✍️ Viết"],["noi","🎤 Nói"]].map(([k,l])=>`<button data-ex="${k}" class="${k===p90Ex?"on":""}">${l}${p90ExDone(idx,k)?" ✓":""}</button>`).join("")}</div>
     <div id="p90ExBox"></div>
+    <div class="p90-row p90-exnav"><button class="p90-btn" id="p90ExPrev">◀ Phần trước</button><button class="p90-btn main" id="p90ExNext">Phần tiếp ▶</button></div>
+    ${dl.length>=4?'<div class="p90-ok">🎉 Đạt ngày '+(idx+1)+'! Sếp giỏi quá.</div>':'<p><small>Xong '+dl.length+'/4 phần · làm đạt cả 4 phần là hoàn thành ngày.</small></p>'}
+    <textarea id="p90Note" placeholder="Ghi chú / từ mới tự gặp hôm nay...">${d.notes[idx]||""}</textarea>
+    <div class="p90-row"><button class="p90-btn" id="p90DayPrev" ${idx<=0?"disabled":""}>◀ Ngày ${idx}</button><button class="p90-btn" id="p90DayNext" ${idx>=89?"disabled":""}>Ngày ${idx+2} ▶</button></div>
   </div>
   ${(()=>{const sg=P90_SONGS[D.wk],q=encodeURIComponent(sg[0]+" "+sg[2]+" pinyin lyrics");return `<div class="p90-card p90-song"><h4>🎵 Bài hát tuần ${D.wk+1} · luyện nghe</h4>
     <div class="p90-songt"><span class="p90-hz2">${sg[0]}</span><br>${sg[1]} · <small>${sg[2]} · ${"⭐".repeat(sg[5])}</small></div>
@@ -1783,13 +1787,6 @@ function renderPlan90(){
     <a class="p90-btn main p90-yt" href="https://www.youtube.com/results?search_query=${encodeURIComponent(fm[5])}" target="_blank" rel="noopener">▶ Xem trên YouTube</a>
     <p><small>🎬 Cách xem 1 đoạn 5–10 phút (tối, thay lướt mạng): ① xem phụ đề Việt để hiểu chuyện ② xem lại chỉ phụ đề Trung/Pinyin, bấm dừng ở câu quen ③ chọn 3 câu ngắn, tua lại nhại theo 5 lần. Ghi câu hay vào ô Ghi chú.</small></p>
   </div>`;})()}
-  <div class="p90-card"><h4>✔️ 4 kỹ năng hôm nay (${dl.length}/4)</h4>
-    ${D.tasks.map((t,k)=>`<label class="p90-t ${dl.includes(k)?"ok":""}"><input type="checkbox" data-k="${k}" ${dl.includes(k)?"checked":""}>
-      <span class="p90-tag" style="background:${tag[t[1]]}">${t[1]}</span>
-      <span><small>${t[0]} · ${t[2]} phút</small><br>${t[3]} <a href="#" class="p90-go" data-exgo="${["nghe","viet","doc","noi"][k]}">${D.final&&k===3?"":"Làm bài ›"}</a></span></label>`).join("")}
-    ${dl.length>=4?`<div class="p90-ok">🎉 Đạt ngày ${idx+1}! Sếp giỏi quá.</div>`:""}
-    <textarea id="p90Note" placeholder="Ghi chú / từ mới tự gặp hôm nay...">${d.notes[idx]||""}</textarea>
-  </div>
   <div class="p90-card"><h4>🗺️ Lộ trình 12 tuần</h4><small>Bấm vào ô ngày để mở bài học ngày đó · 🟩 đạt · 🟨 đang làm · ⬜ chưa học</small>
     ${Array.from({length:13},(_,w)=>{const days=w<12?[...Array(7)].map((_,k)=>w*7+k):[84,85,86,87,88,89];const dn=days.filter(full).length;
       const t=w<12?P90_WEEKS[w].t:"Tổng ôn thực chiến";const mon=w<4?1:w<8?2:3;

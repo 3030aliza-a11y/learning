@@ -256,6 +256,17 @@
   .p90-hw{width:220px;height:220px;margin:0 auto;border:2px dashed var(--line);border-radius:12px;background:#fff}
   .p90-say{text-align:center;background:var(--paper);border-radius:12px;padding:12px;line-height:1.6}
   .p90-jump{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:12px}.p90-jump .p90-btn{padding:14px 8px;font-size:15px;font-weight:700}
+  .p90-month{margin:14px 0 6px;font-weight:700;color:var(--red);font-size:14px}
+  .p90-wk{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:6px}.p90-wk.curwk{border-color:var(--red);background:#fff8f3}
+  .p90-wkt{font-size:13px;margin-bottom:6px;display:flex;gap:4px}.p90-wkt span{margin-left:auto;color:var(--green);font-weight:700}
+  .p90-wkd{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .p90-wkd button{border:1px solid var(--line);background:var(--paper);border-radius:8px;font-size:13px;padding:4px 0;line-height:1.2}
+  .p90-wkd button small{display:block;font-size:9px;color:var(--muted)}
+  .p90-wkd .full{background:var(--green);color:#fff}.p90-wkd .full small{color:#e6f4e6}.p90-wkd .half{background:#f6e3b4}
+  .p90-wkd .cur{outline:2px solid var(--red)}.p90-wkd .tdy{font-weight:800}
+  .p90-prog{height:5px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:8px}.p90-prog i{display:block;height:100%;background:var(--gold)}
+  .p90-ans{min-height:48px;border:2px dashed var(--gold);border-radius:12px;padding:10px;font-size:24px;text-align:center;background:#fff}
+  .p90-chip{font-size:20px;padding:10px 14px}.p90-chip:disabled{opacity:.25}
   .p90-sub{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 8px;font-size:13px;color:var(--muted)}
   .p90-sub button{border:1px solid var(--line);background:#eee;border-radius:20px;padding:6px 10px;font-size:13px;color:var(--muted)}
   .p90-sub button.on{background:#fff;color:var(--ink);border-color:var(--gold)}
@@ -1696,7 +1707,7 @@ function p90TodayIdx(st){const s=new Date(st+"T00:00:00"),n=new Date(p90Iso(new 
 function p90Day(i){
   const final=i>=84, wk=final?11:Math.floor(i/7), dt=final?6:i%7, W=P90_WEEKS[wk];
   const wn=W.w, part=(!final&&dt<3)?dt:null;
-  const words=part!==null?wn.slice(Math.floor(part*wn.length/3),Math.floor((part+1)*wn.length/3)):wn;
+  const words=p90Expand(i,part!==null?wn.slice(Math.floor(part*wn.length/3),Math.floor((part+1)*wn.length/3)):wn,final);
   const sent=part!==null?[W.s[part]]:W.s;
   const chars=[...W.h].slice(part!==null?part*3:0,part!==null?part*3+3:5);
   let tasks;
@@ -1748,7 +1759,8 @@ function renderPlan90(){
     ${D.words.map(w=>`<div class="p90-w"><span class="p90-hz">${w[0]}</span><span>${w[1]}<br><small>${w[2]}</small></span><button class="speak-btn" data-say="${w[0]}">🔊</button></div>`).join("")}
     ${D.sent.map(s=>`<div class="p90-s"><div><b>${s[0]}</b><br>${s[1]}<br><small>${s[2]}</small></div><button class="speak-btn" data-say="${s[0]}">🔊</button><button class="speak-btn slow" data-say="${s[0]}" data-slow="1">🐢</button></div>`).join("")}
     ${(!D.final&&D.dt===0)?`<p><small>📐 Ngữ pháp tuần: ${D.W.f}</small></p>`:""}
-    <h4 style="margin-top:14px">💬 Hội thoại ngày ${idx+1} <button class="speak-btn" id="p90DlgAll">▶ Nghe cả đoạn</button></h4>
+    <h4 style="margin-top:14px">💬 Hội thoại ngày ${idx+1}</h4>
+    <button class="p90-btn main" id="p90DlgAll" style="width:100%;margin-bottom:8px">▶ Nghe cả đoạn</button>
     <div class="p90-sub"><span>Phụ đề:</span>${[["hz","汉 Chữ Hán"],["py","Pinyin"],["vi","Nghĩa"]].map(([k,l])=>`<button data-sub="${k}" class="${p90Sub()[k]?"":"on"}">${p90Sub()[k]?"🙈":"👁"} ${l}</button>`).join("")}</div>
     <div id="p90DlgBox" class="${Object.entries(p90Sub()).filter(e=>e[1]).map(e=>"hide-"+e[0]).join(" ")}">
     ${p90Dlg(idx).map((l,k)=>`<div class="p90-s p90-dl" data-line="${k}"><div><b>${k%2?"B":"A"}: <span class="s-hz">${l[0]}</span></b><br><span class="s-py">${l[1]}</span><br><small class="s-vi">${l[2]}</small></div><button class="speak-btn" data-say="${l[0]}">🔊</button><button class="speak-btn slow" data-say="${l[0]}" data-slow="1">🐢</button></div>`).join("")}
@@ -1774,19 +1786,23 @@ function renderPlan90(){
   <div class="p90-card"><h4>✔️ 4 kỹ năng hôm nay (${dl.length}/4)</h4>
     ${D.tasks.map((t,k)=>`<label class="p90-t ${dl.includes(k)?"ok":""}"><input type="checkbox" data-k="${k}" ${dl.includes(k)?"checked":""}>
       <span class="p90-tag" style="background:${tag[t[1]]}">${t[1]}</span>
-      <span><small>${t[0]} · ${t[2]} phút</small><br>${t[3]}${t[4]?` <a href="#" data-go="${t[4]}">Mở ›</a>`:""}</span></label>`).join("")}
+      <span><small>${t[0]} · ${t[2]} phút</small><br>${t[3]} <a href="#" class="p90-go" data-exgo="${["nghe","viet","doc","noi"][k]}">${D.final&&k===3?"":"Làm bài ›"}</a></span></label>`).join("")}
     ${dl.length>=4?`<div class="p90-ok">🎉 Đạt ngày ${idx+1}! Sếp giỏi quá.</div>`:""}
     <textarea id="p90Note" placeholder="Ghi chú / từ mới tự gặp hôm nay...">${d.notes[idx]||""}</textarea>
   </div>
-  <div class="p90-card"><h4>🗺️ Bản đồ 90 ngày</h4><div class="p90-grid">
-    ${Array.from({length:90},(_,k)=>`<button data-day="${k}" class="${full(k)?"full":(d.done[k]||[]).length?"half":""} ${k===idx?"cur":""}">${k+1}</button>`).join("")}
-  </div><small>Ngày bắt đầu: <input type="date" id="p90Start" value="${d.start}"></small></div>`;
+  <div class="p90-card"><h4>🗺️ Lộ trình 12 tuần</h4><small>Bấm vào ô ngày để mở bài học ngày đó · 🟩 đạt · 🟨 đang làm · ⬜ chưa học</small>
+    ${Array.from({length:13},(_,w)=>{const days=w<12?[...Array(7)].map((_,k)=>w*7+k):[84,85,86,87,88,89];const dn=days.filter(full).length;
+      const t=w<12?P90_WEEKS[w].t:"Tổng ôn thực chiến";const mon=w<4?1:w<8?2:3;
+      return `${w%4===0?`<div class="p90-month">Tháng ${w<12?mon:3}${w===0?" · Giao tiếp sinh tồn":w===4?" · Công sở & xã giao":w===8?" · Hội chợ & nhà xưởng":""}</div>`:""}
+      <div class="p90-wk ${days.includes(idx)?"curwk":""}"><div class="p90-wkt"><b>${w<12?"Tuần "+(w+1):"Ngày 85–90"}</b> · ${t} <span>${dn}/${days.length}</span></div>
+      <div class="p90-wkd">${days.map(k=>`<button data-day="${k}" class="${full(k)?"full":(d.done[k]||[]).length?"half":""} ${k===idx?"cur":""} ${k===today?"tdy":""}">${k+1}<small>${k<84?["Học","Học","Học","Thoại","Viết","Ôn","Test"][k%7]:"Ôn"}</small></button>`).join("")}</div></div>`;}).join("")}<small>Ngày bắt đầu: <input type="date" id="p90Start" value="${d.start}"></small></div>`;
   box.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>speak(b.dataset.say,b.dataset.slow?0.4:0.72));
   box.querySelectorAll("input[data-k]").forEach(c=>c.onchange=()=>{const x=p90Load();x.done=x.done||{};let a=x.done[idx]||[];const k=+c.dataset.k;a=c.checked?[...new Set([...a,k])]:a.filter(v=>v!==k);x.done[idx]=a;p90Save(x);renderPlan90();});
   box.querySelectorAll("[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();const b=document.querySelector(`nav button[data-tab="${a.dataset.go}"]`);if(b)b.click();});
-  box.querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>{p90View=+b.dataset.day;renderPlan90();});
-  document.getElementById("p90Prev").onclick=()=>{p90View=idx-1;renderPlan90();};
-  document.getElementById("p90Next").onclick=()=>{p90View=idx+1;renderPlan90();};
+  const goDay=d=>{p90View=d;renderPlan90();const n=document.querySelector("#plan90View .p90-nav");if(n)n.scrollIntoView({behavior:"smooth",block:"start"});};
+  box.querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>goDay(+b.dataset.day));
+  document.getElementById("p90Prev").onclick=()=>goDay(idx-1);
+  document.getElementById("p90Next").onclick=()=>goDay(idx+1);
   document.getElementById("p90Note").onchange=e=>{const x=p90Load();x.notes=x.notes||{};x.notes[idx]=e.target.value;p90Save(x);};
   document.getElementById("p90Start").onchange=e=>{if(!e.target.value)return;if(!confirm("Đổi ngày bắt đầu?"))return renderPlan90();const x=p90Load();x.start=e.target.value;p90Save(x);p90View=null;renderPlan90();};
   box.querySelectorAll("[data-sub]").forEach(b=>b.onclick=()=>{const s=p90Sub();s[b.dataset.sub]=!s[b.dataset.sub];try{localStorage.setItem("p90_sub",JSON.stringify(s));}catch(e){}
@@ -1796,6 +1812,9 @@ function renderPlan90(){
   const allBtn=document.getElementById("p90DlgAll");
   allBtn.onclick=()=>{if(allBtn.dataset.on){speechSynthesis.cancel();delete allBtn.dataset.on;allBtn.textContent="▶ Nghe cả đoạn";return;}
     allBtn.dataset.on=1;allBtn.textContent="⏹ Dừng";const L=p90Dlg(idx);let k=0;const nx=()=>{if(!allBtn.dataset.on)return;if(k>=L.length){delete allBtn.dataset.on;allBtn.textContent="▶ Nghe cả đoạn";return;}box.querySelectorAll(".p90-dl").forEach((x,j)=>x.classList.toggle("playing",j===k));const u=new SpeechSynthesisUtterance(L[k][0]);u.lang="zh-CN";u.rate=0.65;u.onend=()=>{box.querySelectorAll(".p90-dl").forEach(x=>x.classList.remove("playing"));k++;setTimeout(nx,500);};speechSynthesis.speak(u);};speechSynthesis.cancel();nx();};
+  box.querySelectorAll("[data-exgo]").forEach(a=>a.onclick=e=>{e.preventDefault();e.stopPropagation();p90Ex=a.dataset.exgo;
+    box.querySelectorAll("[data-ex]").forEach(x=>x.classList.toggle("on",x.dataset.ex===p90Ex));p90RunEx(D,idx);
+    document.getElementById("p90ExCard").scrollIntoView({behavior:"smooth"});});
   box.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{p90Ex=b.dataset.ex;box.querySelectorAll("[data-ex]").forEach(x=>x.classList.toggle("on",x===b));p90RunEx(D,idx);});
   p90RunEx(D,idx);
 }
@@ -1902,6 +1921,33 @@ const P90_SONGS=[
 ["小幸运","Xiǎo xìngyùn – Hạnh phúc nhỏ","Điền Phức Chân","Nhạc phim nổi tiếng, giọng nữ trong, luyện nghe câu dài.",[["幸运","xìngyùn","may mắn"],["遇见","yùjiàn","gặp gỡ"],["青春","qīngchūn","thanh xuân"]],4],
 ["后来","Hòulái – Về sau","Lưu Nhược Anh","Bài karaoke kinh điển; tổng ôn — nghe hiểu ý chính cả bài.",[["后来","hòulái","về sau"],["终于","zhōngyú","cuối cùng"],["珍惜","zhēnxī","trân trọng"]],4]
 ];
+/* ===== MỞ RỘNG TỪ VỰNG MỖI NGÀY: từ chủ đề + từ trong hội thoại + 3 từ HSK1 ===== */
+const P90_EXTRA=[["很","hěn","rất"],["也","yě","cũng"],["高兴","gāoxìng","vui"],["认识","rènshi","quen biết"],["吗","ma","không? (hỏi)"],["呢","ne","còn…thì sao"],["老师","lǎoshī","thầy/cô"],["同学","tóngxué","bạn học"],["明天见","míngtiān jiàn","mai gặp"],["贵姓","guì xìng","quý danh (họ)"],["名字","míngzi","tên"],["哪国","nǎ guó","nước nào"],["工作","gōngzuò","làm việc"],["经理","jīnglǐ","giám đốc"],["关照","guānzhào","chiếu cố"],["贵","guì","đắt"],["便宜","piányi","rẻ"],["一点","yìdiǎn","một chút"],["可以","kěyǐ","có thể"],["几","jǐ","mấy"],["月","yuè","tháng"],["现在","xiànzài","bây giờ"],["半","bàn","rưỡi"],["换","huàn","đổi"],["大概","dàgài","khoảng"],["开会","kāihuì","họp"],["下午","xiàwǔ","buổi chiều"],["上午","shàngwǔ","buổi sáng"],["晚上","wǎnshang","buổi tối"],["一起","yìqǐ","cùng nhau"],["想","xiǎng","muốn"],["能","néng","có thể"],["还是","háishi","hay là"],["先","xiān","trước"],["喝","hē","uống"],["多","duō","nhiều"],["服务员","fúwùyuán","phục vụ"],["请客","qǐngkè","mời (trả tiền)"],["扫","sǎo","quét (mã)"],["没问题","méi wèntí","không vấn đề"],["马上","mǎshàng","ngay lập tức"],["发","fā","gửi"],["最近","zuìjìn","gần đây"],["忙","máng","bận"],["接","jiē","đón"],["顺利","shùnlì","suôn sẻ"],["外面","wàimiàn","bên ngoài"],["等","děng","đợi"],["休息","xiūxi","nghỉ ngơi"],["办公室","bàngōngshì","văn phòng"],["漂亮","piàoliang","đẹp"],["开始","kāishǐ","bắt đầu"],["需要","xūyào","cần"],["优惠","yōuhuì","ưu đãi"],["免费","miǎnfèi","miễn phí"],["寄","jì","gửi (bưu điện)"],["看看","kànkan","xem thử"],["特点","tèdiǎn","đặc điểm"],["省电","shěng diàn","tiết kiệm điện"],["当然","dāngrán","đương nhiên"],["以后","yǐhòu","sau này"],["保持","bǎochí","giữ"],["联系","liánxì","liên lạc"],["港口","gǎngkǒu","cảng"],["工程师","gōngchéngshī","kỹ sư"],["详细","xiángxì","chi tiết"],["签","qiān","ký"],["合同","hétong","hợp đồng"],["期待","qīdài","mong chờ"],["安全帽","ānquánmào","mũ bảo hộ"],["干净","gānjìng","sạch sẽ"],["进口","jìnkǒu","nhập khẩu"],["检查","jiǎnchá","kiểm tra"],["抱歉","bàoqiàn","xin lỗi"],["尽快","jǐnkuài","càng sớm càng tốt"],["随时","suíshí","bất cứ lúc nào"],["回复","huífù","trả lời"],["恐怕","kǒngpà","e rằng"],["理解","lǐjiě","hiểu"],["感谢","gǎnxiè","cảm ơn"],["热情","rèqíng","nhiệt tình"],["招待","zhāodài","tiếp đãi"],["一定","yídìng","nhất định"],["一路平安","yílù píng'ān","thượng lộ bình an"],["国家","guójiā","quốc gia"],["机会","jīhuì","cơ hội"],["希望","xīwàng","hy vọng"],["说","shuō","nói"],["张","zhāng","tờ (lượng từ)"],["货物","huòwù","hàng hóa"],["进","jìn","vào"]];
+const P90_CATORDER=["Chào hỏi","Đại từ","Con người","Gia đình","Số đếm","Thời gian","Ăn uống","Màu sắc","Tính từ","Động từ","Đồ vật & nơi chốn","Ngữ pháp cơ bản"];
+let P90_DICT=null,P90_HSK=null;
+function p90Dict(){
+  if(P90_DICT)return P90_DICT;
+  P90_DICT=new Map();
+  const add=(c,p,m)=>{if(c&&!P90_DICT.has(c))P90_DICT.set(c,[c,p,m]);};
+  P90_WEEKS.forEach(w=>w.w.forEach(x=>add(...x)));P90_EXTRA.forEach(x=>add(...x));
+  (typeof VOCAB!=="undefined"?VOCAB:[]).forEach(v=>add(v.c,v.p,v.m));
+  P90_HSK=(typeof VOCAB!=="undefined"?[...VOCAB]:[]).sort((a,b)=>P90_CATORDER.indexOf(a.cat)-P90_CATORDER.indexOf(b.cat)).map(v=>[v.c,v.p,v.m]);
+  return P90_DICT;
+}
+function p90Seg(text){const D=p90Dict(),out=[];const s=text.replace(/[^一-鿿]/g,"|");let i=0;
+  while(i<s.length){if(s[i]==="|"){i++;continue;}let hit=null;for(let L=Math.min(6,s.length-i);L>=1;L--){const w=s.substr(i,L);if(D.has(w)){hit=w;break;}}
+    if(hit){out.push(D.get(hit));i+=hit.length;}else i++;}return out;}
+function p90Expand(i,base,final){
+  p90Dict();const seen=new Set(),res=[];const push=w=>{if(w&&!seen.has(w[0])){seen.add(w[0]);res.push(w);}};
+  base.forEach(push);
+  if(final){return res;}
+  const dt=i%7;
+  if(dt>=5){[0,1,2,3,4].forEach(k=>{const j=i-dt+k;p90Seg(p90Dlg(j).map(l=>l[0]).join("|")).filter(w=>w[0].length>1||P90_WEEKS[Math.floor(i/7)].w.some(x=>x[0]===w[0])).forEach(push);});return res.slice(0,20);}
+  p90Seg(p90Dlg(i).map(l=>l[0]).join("|")).forEach(push);
+  const H=P90_HSK||[];let k=(Math.floor(i/7)*5+dt)*3;
+  while(res.length<8&&k<H.length)push(H[k++]);
+  return res;
+}
 function p90Sub(){try{return JSON.parse(localStorage.getItem("p90_sub"))||{};}catch(e){return {};}}
 /* ===== PHIM LUYỆN NGHE (dễ → khó) ===== */
 const P90_FILMS=[
@@ -1929,36 +1975,84 @@ function p90Tick(idx,ex){
   if(x.done[idx].length>=4)setTimeout(renderPlan90,1500);
 }
 function p90Shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function p90Pool(D){
-  const all=P90_WEEKS.slice(0,D.wk+1).flatMap(w=>w.w), week=D.final?all:D.W.w, today=D.final?p90Shuffle(all).slice(0,5):D.words;
-  const qs=p90Shuffle([...today,...today,...p90Shuffle(week)]).filter((w,i,a)=>i===0||a[i-1][0]!==w[0]).slice(0,5);
-  return {all,qs};
+/* 10 câu/kỹ năng, trộn nhiều dạng. Mỗi câu: {kind, ans:[c,p,m], opts:[...], prompt, show(o)} */
+function p90Build(D,idx,ex){
+  p90Dict();
+  const learned=[];for(let j=0;j<=idx;j++)learned.push(...p90Day(j).words);
+  const uniq=[...new Map(learned.map(w=>[w[0],w])).values()];
+  const today=D.words.length?D.words:uniq.slice(-8);
+  const lines=[];for(let j=Math.max(0,idx-6);j<=idx;j++)lines.push(...p90Dlg(j));
+  const todayLines=p90Dlg(idx);
+  const pick=(pool,n)=>p90Shuffle(pool).slice(0,n);
+  const distract=(q,pool,key)=>pick(pool.filter(w=>w[0]!==q[0]&&w[key]!==q[key]),3);
+  const qs=[];
+  let wq=[...pick(today,Math.min(today.length,6)),...pick(uniq.filter(w=>!today.includes(w)),10)].slice(0,7);
+  while(wq.length<7)wq.push(...pick(today,7-wq.length));
+  let lq=p90Shuffle([...todayLines,...pick(lines.filter(l=>!todayLines.includes(l)),3)]).slice(0,3);
+  if(lq.length<3)lq.push(...pick(P90_DLG.slice(0,D.wk+1).flat().filter(l=>!lq.includes(l)),3-lq.length));
+  if(lines.length<4)lines.push(...P90_DLG.slice(0,D.wk+2).flat().filter(l=>!lines.includes(l)));
+  if(ex==="nghe"){
+    wq.forEach((w,k)=>qs.push(k%2?{t:"Nghe và chọn NGHĨA đúng",say:w[0],ans:w,opts:[w,...distract(w,uniq,2)],lab:o=>o[2]}
+                                 :{t:"Nghe và chọn CHỮ đúng",say:w[0],ans:w,opts:[w,...distract(w,uniq,0)],lab:o=>`<span class="p90-hz2">${o[0]}</span>`}));
+    lq.forEach(l=>qs.push({t:"Nghe câu, chọn nghĩa đúng",say:l[0],ans:l,opts:[l,...distract(l,lines.length>=4?lines:P90_DLG.flat(),2)],lab:o=>o[2]}));
+  }else{
+    wq.forEach((w,k)=>qs.push(k%3===2?{t:"Pinyin này là chữ nào?",big:w[1],ans:w,opts:[w,...distract(w,uniq,0)],lab:o=>`<span class="p90-hz2">${o[0]}</span>`}
+                                 :{t:"Chữ này nghĩa là gì?",big:w[0],ans:w,opts:[w,...distract(w,uniq,2)],lab:o=>o[2]}));
+    lq.forEach(l=>qs.push({t:"Đọc câu (không Pinyin), chọn nghĩa",big:l[0],sm:1,ans:l,opts:[l,...distract(l,lines.length>=4?lines:P90_DLG.flat(),2)],lab:o=>o[2]}));
+  }
+  qs.forEach(q=>q.opts=p90Shuffle(q.opts));
+  return p90Shuffle(qs.slice(0,7)).concat(qs.slice(7));
 }
 function p90Choice(D,idx,ex){
-  const box=document.getElementById("p90ExBox"), {all,qs}=p90Pool(D); let n=0,score=0;
+  const box=document.getElementById("p90ExBox"), qs=p90Build(D,idx,ex), need=Math.ceil(qs.length*0.8); let n=0,score=0;
   const step=()=>{
-    if(n>=qs.length){const ok=score>=4;box.innerHTML=`<div class="p90-res ${ok?"good":""}">${ok?"🎉":"💪"} Đúng ${score}/${qs.length}. ${ok?"Đạt! Đã tick kỹ năng.":"Cần đúng 4/5 — làm lại nhé."}</div><button class="p90-btn" id="p90Again">↻ Làm lại</button>`;
+    if(n>=qs.length){const ok=score>=need;box.innerHTML=`<div class="p90-res ${ok?"good":""}">${ok?"🎉":"💪"} Đúng ${score}/${qs.length}. ${ok?"Đạt! Đã tick kỹ năng.":`Cần đúng ${need}/${qs.length} — làm lại nhé (câu hỏi sẽ đổi).`}</div><button class="p90-btn" id="p90Again">↻ Làm lại</button>`;
       if(ok)p90Tick(idx,ex);document.getElementById("p90Again").onclick=()=>p90Choice(D,idx,ex);return;}
-    const q=qs[n], opts=p90Shuffle([q,...p90Shuffle(all.filter(w=>w[0]!==q[0]&&w[2]!==q[2])).slice(0,3)]);
-    box.innerHTML=`<p class="p90-q"><small>Câu ${n+1}/${qs.length}</small><br>${ex==="nghe"?`Nghe và chọn chữ đúng <button class="speak-btn" id="p90Play">🔊</button><button class="speak-btn slow" id="p90PlayS">🐢</button>`:`Chữ này nghĩa là gì?<br><span class="p90-big">${q[0]}</span>`}</p>
-      <div class="p90-opts">${opts.map(o=>`<button data-o="${o[0]}">${ex==="nghe"?`<span class="p90-hz2">${o[0]}</span>`:o[2]}</button>`).join("")}</div>`;
-    if(ex==="nghe"){const p=()=>speak(q[0],0.72);p();document.getElementById("p90Play").onclick=p;document.getElementById("p90PlayS").onclick=()=>speak(q[0],0.4);}
+    const q=qs[n];
+    box.innerHTML=`<div class="p90-prog"><i style="width:${n/qs.length*100}%"></i></div>
+      <p class="p90-q"><small>Câu ${n+1}/${qs.length} · đúng ${score}</small><br><b>${q.t}</b><br>
+      ${q.say?`<button class="p90-btn" id="p90Play">🔊 Nghe</button> <button class="p90-btn" id="p90PlayS">🐢 Chậm</button>`:`<span class="${q.sm?"p90-hz2":"p90-big"}">${q.big}</span>`}</p>
+      <div class="p90-opts">${q.opts.map((o,k)=>`<button data-o="${k}">${q.lab(o)}</button>`).join("")}</div>`;
+    if(q.say){const p=()=>speak(q.say,0.72);p();document.getElementById("p90Play").onclick=p;document.getElementById("p90PlayS").onclick=()=>speak(q.say,0.4);}
     box.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{
-      const right=b.dataset.o===q[0]; if(right)score++;
-      box.querySelectorAll("[data-o]").forEach(x=>{x.disabled=true;if(x.dataset.o===q[0])x.classList.add("right");});
+      const right=q.opts[+b.dataset.o]===q.ans; if(right)score++;
+      box.querySelectorAll("[data-o]").forEach(x=>{x.disabled=true;if(q.opts[+x.dataset.o]===q.ans)x.classList.add("right");});
       if(!right)b.classList.add("wrong");
-      box.insertAdjacentHTML("beforeend",`<p class="p90-fb">${q[0]} · ${q[1]} · ${q[2]}</p>`);
-      if(ex==="doc")speak(q[0],0.72);
-      setTimeout(()=>{n++;step();},right?900:1900);
+      box.insertAdjacentHTML("beforeend",`<p class="p90-fb"><b>${q.ans[0]}</b> · ${q.ans[1]} · ${q.ans[2]}</p>`);
+      if(!q.say)speak(q.ans[0],0.72);
+      setTimeout(()=>{n++;step();},right?1000:2200);
     });
+  };step();
+}
+/* Ghép câu: chạm các mảnh theo đúng thứ tự */
+function p90Order(D,idx,done){
+  const box=document.getElementById("p90ExBox");
+  const lines=p90Shuffle(p90Dlg(idx).filter(l=>p90Seg(l[0]).length>=2)).concat(D.sent).filter(l=>p90Seg(l[0]).length>=2).slice(0,3);
+  let n=0,ok=0;
+  const step=()=>{
+    if(n>=lines.length){done(ok,lines.length);return;}
+    const l=lines[n], parts=p90Seg(l[0]).map(w=>w[0]); let picked=[];
+    let sh=p90Shuffle(parts.map((p,k)=>({p,k})));if(sh.every((x,k)=>x.k===k)&&sh.length>1)sh=sh.reverse();
+    const draw=()=>{box.innerHTML=`<p class="p90-q"><small>Ghép câu ${n+1}/${lines.length}</small><br><b>Xếp thành câu:</b> ${l[2]}</p>
+      <div class="p90-ans">${picked.map(x=>x.p).join(" ")||"<span style='color:#bbb'>chạm các mảnh bên dưới…</span>"}</div>
+      <div class="p90-row">${sh.map((x,k)=>`<button class="p90-btn p90-chip" data-c="${k}" ${picked.includes(x)?"disabled":""}>${x.p}</button>`).join("")}</div>
+      <div class="p90-row"><button class="p90-btn" id="p90Undo">↶ Xoá</button><button class="p90-btn" id="p90Hint">🔊 Nghe gợi ý</button></div>`;
+      box.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{picked.push(sh[+b.dataset.c]);
+        if(picked.length===parts.length){const right=picked.map(x=>x.p).join("")===parts.join("");if(right)ok++;
+          draw();box.insertAdjacentHTML("beforeend",`<div class="p90-res ${right?"good":""}">${right?"✅ Đúng!":"❌ Đáp án:"} ${l[0]}<br><small>${l[1]}</small></div>`);speak(l[0],0.7);setTimeout(()=>{n++;step();},right?1600:3000);}
+        else draw();});
+      document.getElementById("p90Undo").onclick=()=>{picked.pop();draw();};
+      document.getElementById("p90Hint").onclick=()=>speak(l[0],0.55);};
+    draw();
   };step();
 }
 function p90Write(D,idx){
   const box=document.getElementById("p90ExBox");
-  const chars=[...new Set(D.words.map(w=>w[0]).join("").replace(/[^一-鿿]/g,""))].slice(0,4);
+  const chars=[...new Set(D.words.map(w=>w[0]).join("").replace(/[^一-鿿]/g,""))].slice(0,8);
   let i=0,miss=0;
   const step=()=>{
-    if(i>=chars.length){box.innerHTML=`<div class="p90-res good">🎉 Viết xong ${chars.length} chữ (sai ${miss} nét). Đã tick VIẾT.</div><button class="p90-btn" id="p90Again">↻ Viết lại</button>`;p90Tick(idx,"viet");document.getElementById("p90Again").onclick=()=>p90Write(D,idx);return;}
+    if(i>=chars.length){box.innerHTML=`<div class="p90-res good">✍️ Viết xong ${chars.length} chữ (sai ${miss} nét). Tiếp: ghép câu…</div>`;
+      setTimeout(()=>p90Order(D,idx,(ok,tot)=>{box.innerHTML=`<div class="p90-res good">🎉 Phần VIẾT xong: ${chars.length} chữ + ghép đúng ${ok}/${tot} câu. Đã tick VIẾT.</div><button class="p90-btn" id="p90Again">↻ Làm lại</button>`;p90Tick(idx,"viet");document.getElementById("p90Again").onclick=()=>p90Write(D,idx);}),1200);return;}
     const ch=chars[i];
     box.innerHTML=`<p class="p90-q"><small>Chữ ${i+1}/${chars.length}</small> — Tự viết theo đúng thứ tự nét vào ô</p><div id="p90Hw" class="p90-hw"></div>
       <div class="p90-row"><button class="p90-btn" id="p90Demo">▶ Xem mẫu</button><button class="p90-btn" id="p90Skip">Bỏ qua ›</button></div>`;

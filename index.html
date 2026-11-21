@@ -256,6 +256,7 @@
   .p90-hw{width:220px;height:220px;margin:0 auto;border:2px dashed var(--line);border-radius:12px;background:#fff}
   .p90-say{text-align:center;background:var(--paper);border-radius:12px;padding:12px;line-height:1.6}
   .p90-jump{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:12px}.p90-jump .p90-btn{padding:14px 8px;font-size:15px;font-weight:700}
+  .p90-py{font-size:18px;color:var(--muted)}
   .p90-exnav{border-top:1px dashed var(--line);padding-top:10px;margin-top:14px}.p90-exnav .p90-btn{flex:1;padding:12px}
   .p90-guide{background:#f3f8ff;border-left:4px solid #2b7bd1;border-radius:8px;padding:10px;margin-bottom:12px;font-size:14px;line-height:1.5}
   .p90-month{margin:14px 0 6px;font-weight:700;color:var(--red);font-size:14px}
@@ -1998,12 +1999,12 @@ function p90Build(D,idx,ex){
   if(lines.length<4)lines.push(...P90_DLG.slice(0,D.wk+2).flat().filter(l=>!lines.includes(l)));
   if(ex==="nghe"){
     wq.forEach((w,k)=>qs.push(k%2?{t:"Nghe và chọn NGHĨA đúng",say:w[0],ans:w,opts:[w,...distract(w,uniq,2)],lab:o=>o[2]}
-                                 :{t:"Nghe và chọn CHỮ đúng",say:w[0],ans:w,opts:[w,...distract(w,uniq,0)],lab:o=>`<span class="p90-hz2">${o[0]}</span>`}));
+                                 :{t:"Nghe và chọn CHỮ đúng",say:w[0],ans:w,opts:[w,...distract(w,uniq,0)],lab:o=>`<span class="p90-hz2">${o[0]}</span><br><small>${o[1]}</small>`}));
     lq.forEach(l=>qs.push({t:"Nghe câu, chọn nghĩa đúng",say:l[0],ans:l,opts:[l,...distract(l,lines.length>=4?lines:P90_DLG.flat(),2)],lab:o=>o[2]}));
   }else{
-    wq.forEach((w,k)=>qs.push(k%3===2?{t:"Pinyin này là chữ nào?",big:w[1],ans:w,opts:[w,...distract(w,uniq,0)],lab:o=>`<span class="p90-hz2">${o[0]}</span>`}
-                                 :{t:"Chữ này nghĩa là gì?",big:w[0],ans:w,opts:[w,...distract(w,uniq,2)],lab:o=>o[2]}));
-    lq.forEach(l=>qs.push({t:"Đọc câu (không Pinyin), chọn nghĩa",big:l[0],sm:1,ans:l,opts:[l,...distract(l,lines.length>=4?lines:P90_DLG.flat(),2)],lab:o=>o[2]}));
+    wq.forEach((w,k)=>qs.push(k%3===2?{t:"Nghĩa này là chữ nào?",big:w[2],sm:1,ans:w,opts:[w,...distract(w,uniq,0)],lab:o=>`<span class="p90-hz2">${o[0]}</span><br><small>${o[1]}</small>`}
+                                 :{t:"Chữ này nghĩa là gì?",big:w[0],py:w[1],ans:w,opts:[w,...distract(w,uniq,2)],lab:o=>o[2]}));
+    lq.forEach(l=>qs.push({t:"Đọc câu, chọn nghĩa",big:l[0],py:l[1],sm:1,ans:l,opts:[l,...distract(l,lines.length>=4?lines:P90_DLG.flat(),2)],lab:o=>o[2]}));
   }
   qs.forEach(q=>q.opts=p90Shuffle(q.opts));
   return p90Shuffle(qs.slice(0,7)).concat(qs.slice(7));
@@ -2016,7 +2017,7 @@ function p90Choice(D,idx,ex){
     const q=qs[n];
     box.innerHTML=`<div class="p90-prog"><i style="width:${n/qs.length*100}%"></i></div>
       <p class="p90-q"><small>Câu ${n+1}/${qs.length} · đúng ${score}</small><br><b>${q.t}</b><br>
-      ${q.say?`<button class="p90-btn" id="p90Play">🔊 Nghe</button> <button class="p90-btn" id="p90PlayS">🐢 Chậm</button>`:`<span class="${q.sm?"p90-hz2":"p90-big"}">${q.big}</span>`}</p>
+      ${q.say?`<button class="p90-btn" id="p90Play">🔊 Nghe</button> <button class="p90-btn" id="p90PlayS">🐢 Chậm</button>`:`<span class="${q.sm?"p90-hz2":"p90-big"}">${q.big}</span>${q.py?`<br><span class="p90-py">${q.py}</span>`:""}`}</p>
       <div class="p90-opts">${q.opts.map((o,k)=>`<button data-o="${k}">${q.lab(o)}</button>`).join("")}</div>`;
     if(q.say){const p=()=>speak(q.say,0.72);p();document.getElementById("p90Play").onclick=p;document.getElementById("p90PlayS").onclick=()=>speak(q.say,0.4);}
     box.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{
@@ -2036,11 +2037,11 @@ function p90Order(D,idx,done){
   let n=0,ok=0;
   const step=()=>{
     if(n>=lines.length){done(ok,lines.length);return;}
-    const l=lines[n], parts=p90Seg(l[0]).map(w=>w[0]); let picked=[];
-    let sh=p90Shuffle(parts.map((p,k)=>({p,k})));if(sh.every((x,k)=>x.k===k)&&sh.length>1)sh=sh.reverse();
-    const draw=()=>{box.innerHTML=`<p class="p90-q"><small>Ghép câu ${n+1}/${lines.length}</small><br><b>Xếp thành câu:</b> ${l[2]}</p>
+    const l=lines[n], segs=p90Seg(l[0]), parts=segs.map(w=>w[0]); let picked=[];
+    let sh=p90Shuffle(segs.map((w,k)=>({p:w[0],y:w[1],k})));if(sh.every((x,k)=>x.k===k)&&sh.length>1)sh=sh.reverse();
+    const draw=()=>{box.innerHTML=`<p class="p90-q"><small>Ghép câu ${n+1}/${lines.length}</small><br><b>Xếp thành câu:</b> ${l[2]}<br><small>${l[1]}</small></p>
       <div class="p90-ans">${picked.map(x=>x.p).join(" ")||"<span style='color:#bbb'>chạm các mảnh bên dưới…</span>"}</div>
-      <div class="p90-row">${sh.map((x,k)=>`<button class="p90-btn p90-chip" data-c="${k}" ${picked.includes(x)?"disabled":""}>${x.p}</button>`).join("")}</div>
+      <div class="p90-row">${sh.map((x,k)=>`<button class="p90-btn p90-chip" data-c="${k}" ${picked.includes(x)?"disabled":""}>${x.p}<br><small>${x.y}</small></button>`).join("")}</div>
       <div class="p90-row"><button class="p90-btn" id="p90Undo">↶ Xoá</button><button class="p90-btn" id="p90Hint">🔊 Nghe gợi ý</button></div>`;
       box.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{picked.push(sh[+b.dataset.c]);
         if(picked.length===parts.length){const right=picked.map(x=>x.p).join("")===parts.join("");if(right)ok++;
@@ -2059,7 +2060,7 @@ function p90Write(D,idx){
     if(i>=chars.length){box.innerHTML=`<div class="p90-res good">✍️ Viết xong ${chars.length} chữ (sai ${miss} nét). Tiếp: ghép câu…</div>`;
       setTimeout(()=>p90Order(D,idx,(ok,tot)=>{box.innerHTML=`<div class="p90-res good">🎉 Phần VIẾT xong: ${chars.length} chữ + ghép đúng ${ok}/${tot} câu. Đã tick VIẾT.</div><button class="p90-btn" id="p90Again">↻ Làm lại</button>`;p90Tick(idx,"viet");document.getElementById("p90Again").onclick=()=>p90Write(D,idx);}),1200);return;}
     const ch=chars[i];
-    box.innerHTML=`<p class="p90-q"><small>Chữ ${i+1}/${chars.length}</small> — Tự viết theo đúng thứ tự nét vào ô</p><div id="p90Hw" class="p90-hw"></div>
+    box.innerHTML=`<p class="p90-q"><small>Chữ ${i+1}/${chars.length}</small> — Tự viết theo đúng thứ tự nét vào ô<br>${(()=>{const w=D.words.find(x=>x[0].includes(ch));return w?`<span class="p90-hz2">${ch}</span> · trong từ <b>${w[0]}</b> ${w[1]} — ${w[2]}`:"";})()}</p><div id="p90Hw" class="p90-hw"></div>
       <div class="p90-row"><button class="p90-btn" id="p90Demo">▶ Xem mẫu</button><button class="p90-btn" id="p90Skip">Bỏ qua ›</button></div>`;
     if(typeof HanziWriter==="undefined"){box.innerHTML+="<p>Chưa tải được bộ viết chữ, cần mạng.</p>";return;}
     const w=HanziWriter.create("p90Hw",ch,{width:220,height:220,padding:8,showOutline:true,showCharacter:false,strokeColor:"#a8232a",outlineColor:"#eadfcd",drawingWidth:22,highlightColor:"#3f9142"});

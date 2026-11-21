@@ -289,6 +289,7 @@
   .dq-t{font-size:19px}.dq-how{text-align:center;color:#2b7bd1;font-weight:700;font-size:15px;margin:6px 0 10px}
   .dq-spk{position:absolute;top:4px;right:4px;width:30px;height:30px;line-height:30px;border-radius:50%;background:#eef5ff;font-size:14px}
   .dq-mean{color:var(--muted);font-size:12px}
+  .p90-live{color:var(--red);animation:fade 1s infinite alternate}
   .p90-exnav{border-top:1px dashed var(--line);padding-top:10px;margin-top:14px}.p90-exnav .p90-btn{flex:1;padding:12px}
   .p90-guide{background:#f3f8ff;border-left:4px solid #2b7bd1;border-radius:8px;padding:10px;margin-bottom:12px;font-size:14px;line-height:1.5}
   .p90-month{margin:14px 0 6px;font-weight:700;color:var(--red);font-size:14px}
@@ -2194,25 +2195,52 @@ function p90Write(D,idx){
 }
 function p90Speak(D,idx){
   const box=document.getElementById("p90ExBox"), SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const canRec=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
   const items=[...p90Dlg(idx),...D.sent].slice(0,4); let i=0,pass=0;
   const clean=t=>t.replace(/[^一-鿿]/g,"");
   const sim=(a,b)=>{a=clean(a);b=clean(b);if(!a.length)return 0;let hit=0;const bb=[...b];for(const c of a){const j=bb.indexOf(c);if(j>-1){hit++;bb.splice(j,1);}}return hit/Math.max(a.length,b.length);};
+  let rec=null,stream=null,recog=null,timer=null;
+  const stopAll=()=>{try{recog&&recog.abort();}catch(e){}recog=null;clearTimeout(timer);try{rec&&rec.state!=="inactive"&&rec.stop();}catch(e){}};
   const step=()=>{
-    if(i>=items.length){box.innerHTML=`<div class="p90-res good">🎉 Nói xong ${items.length} câu (${pass} câu máy nghe chuẩn). Đã tick NÓI.</div><button class="p90-btn" id="p90Again">↻ Nói lại</button>`;p90Tick(idx,"noi");document.getElementById("p90Again").onclick=()=>p90Speak(D,idx);return;}
+    stopAll();
+    if(i>=items.length){box.innerHTML=`<div class="p90-res good">🎉 Nói xong ${items.length} câu (${pass} câu đạt). Đã tính phần NÓI.</div><button class="p90-btn" id="p90Again">↻ Nói lại</button>`;p90Tick(idx,"noi");document.getElementById("p90Again").onclick=()=>p90Speak(D,idx);return;}
     const it=items[i];
-    box.innerHTML=`<p class="p90-q"><small>Câu ${i+1}/${items.length}</small> — Nghe mẫu rồi đọc to</p>
+    box.innerHTML=`<p class="p90-q"><small>Câu ${i+1}/${items.length}</small><br><b class="dq-t">Nghe mẫu rồi đọc to</b></p>
       <div class="p90-say"><b class="p90-hz2">${it[0]}</b><br>${it[1]}<br><small>${it[2]}</small></div>
-      <div class="p90-row"><button class="p90-btn" id="p90Hear">🔊 Nghe mẫu</button>${SR?`<button class="p90-btn main" id="p90Mic">🎤 Bấm và nói</button>`:""}<button class="p90-btn" id="p90Self">${SR?"Bỏ qua ›":"✅ Tôi đã đọc 3 lần ›"}</button></div><p id="p90Heard" class="p90-fb"></p>`;
+      <div class="p90-row"><button class="p90-btn" id="p90Hear">🔊 Nghe mẫu</button><button class="p90-btn" id="p90HearS">🐢 Chậm</button></div>
+      <div class="p90-row">${SR?`<button class="p90-btn main" id="p90Mic">🎤 Máy chấm giọng</button>`:""}${canRec?`<button class="p90-btn main" id="p90Rec">⏺ Ghi âm</button>`:""}</div>
+      <div id="p90Heard" class="p90-fb"></div>
+      <div class="p90-row" id="p90Judge" hidden><button class="p90-btn" id="p90Retry">🔁 Thử lại</button><button class="p90-btn main" id="p90Ok">✅ Giống mẫu ›</button></div>
+      <div class="p90-row"><button class="p90-btn" id="p90Skip">Bỏ qua câu này ›</button></div>`;
+    const out=document.getElementById("p90Heard"),judge=document.getElementById("p90Judge");
     document.getElementById("p90Hear").onclick=()=>speak(it[0],0.6);
-    document.getElementById("p90Self").onclick=()=>{i++;step();};
+    document.getElementById("p90HearS").onclick=()=>speak(it[0],0.4);
+    document.getElementById("p90Skip").onclick=()=>{i++;step();};
+    document.getElementById("p90Retry").onclick=()=>{judge.hidden=true;out.innerHTML="";};
+    document.getElementById("p90Ok").onclick=()=>{pass++;i++;step();};
     if(SR)document.getElementById("p90Mic").onclick=()=>{
-      const r=new SR();r.lang="zh-CN";r.interimResults=false;r.maxAlternatives=3;const out=document.getElementById("p90Heard");out.textContent="🎙️ Đang nghe...";
-      r.onresult=e=>{const alts=[...e.results[0]].map(a=>a.transcript);const best=Math.max(...alts.map(a=>sim(it[0],a)));const pct=Math.round(best*100);
-        out.innerHTML=`Máy nghe: <b>${alts[0]}</b> — khớp ${pct}% ${pct>=70?"✅ Chuẩn!":"❌ Thử lại, nói chậm & rõ thanh điệu"}`;
-        if(pct>=70){pass++;setTimeout(()=>{i++;step();},1500);}};
-      r.onerror=e=>{out.textContent="Không nghe được ("+e.error+"). Cho phép micro hoặc bấm Bỏ qua.";};
-      r.start();
+      stopAll();let got=false;
+      try{recog=new SR();}catch(e){out.innerHTML="Máy không chấm giọng được trên điện thoại này. Bấm ⏺ Ghi âm để tự nghe lại.";return;}
+      recog.lang="zh-CN";recog.interimResults=false;recog.maxAlternatives=3;
+      out.innerHTML=`<b class="p90-live">🎙️ Đang nghe… nói ngay</b>`;
+      recog.onresult=e=>{got=true;clearTimeout(timer);const alts=[...e.results[0]].map(a=>a.transcript);const pct=Math.round(Math.max(...alts.map(a=>sim(it[0],a)))*100);
+        out.innerHTML=`Máy nghe được: <b>${alts[0]}</b><br>Khớp <b>${pct}%</b> ${pct>=70?"✅ Chuẩn!":"❌ Chưa khớp, nói chậm và rõ thanh điệu hơn"}`;
+        if(pct>=70){pass++;setTimeout(()=>{i++;step();},1600);}else judge.hidden=false;};
+      recog.onerror=e=>{got=true;clearTimeout(timer);out.innerHTML=(e.error==="not-allowed"||e.error==="service-not-allowed")?"Chưa cho phép micro. Vào Cài đặt › Safari › Micro, chọn Cho phép, hoặc bấm ⏺ Ghi âm.":"Máy không nhận được giọng ("+e.error+"). Bấm ⏺ Ghi âm để tự nghe lại.";};
+      recog.onend=()=>{clearTimeout(timer);if(!got)out.innerHTML="Máy không nhận được giọng. Bấm ⏺ Ghi âm để tự nghe lại và so với mẫu.";};
+      timer=setTimeout(()=>{try{recog.stop();}catch(e){}},8000);
+      try{recog.start();}catch(e){out.innerHTML="Không bật được chấm giọng. Bấm ⏺ Ghi âm.";}
     };
+    if(canRec){const btn=document.getElementById("p90Rec");btn.onclick=async()=>{
+      if(rec&&rec.state==="recording"){rec.stop();return;}
+      stopAll();
+      try{stream=stream||await navigator.mediaDevices.getUserMedia({audio:true});}catch(e){out.innerHTML="Chưa cho phép micro. Vào Cài đặt › Safari › Micro, chọn Cho phép.";return;}
+      const chunks=[];rec=new MediaRecorder(stream);rec.ondataavailable=ev=>{if(ev.data.size)chunks.push(ev.data);};
+      rec.onstop=()=>{btn.textContent="⏺ Ghi âm lại";const url=URL.createObjectURL(new Blob(chunks,{type:rec.mimeType||"audio/mp4"}));
+        out.innerHTML=`Giọng của sếp: <audio controls src="${url}" style="width:100%;margin-top:6px"></audio><br><small>Nghe lại, bấm 🔊 Nghe mẫu để so sánh, rồi tự chấm.</small>`;judge.hidden=false;};
+      rec.start();btn.textContent="⏹ Dừng ghi";out.innerHTML=`<b class="p90-live">🔴 Đang ghi âm… đọc câu rồi bấm ⏹ Dừng ghi</b>`;
+      timer=setTimeout(()=>{try{rec.state==="recording"&&rec.stop();}catch(e){}},12000);
+    };}
   };step();
 }
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{try{if(typeof convoStop==="function")convoStop();else speechSynthesis.cancel();}catch(e){}}));

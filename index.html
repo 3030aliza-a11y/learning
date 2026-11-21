@@ -242,6 +242,19 @@
   #p90Note{width:100%;box-sizing:border-box;min-height:60px;border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit}
   .p90-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:8px}
   .p90-grid button{border:1px solid var(--line);background:var(--paper);border-radius:6px;font-size:11px;padding:5px 0}
+  .p90-extabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+  .p90-extabs button{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:8px 2px;font-size:13px}
+  .p90-extabs button.on{background:var(--red);color:#fff;border-color:var(--red)}
+  .p90-q{text-align:center;margin:4px 0 10px}.p90-big{font-size:48px;color:var(--red)}.p90-hz2{font-size:26px}
+  .p90-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .p90-opts button{min-height:56px;border:1px solid var(--line);background:#fff;border-radius:12px;font-size:15px;padding:8px}
+  .p90-opts .right{background:#dff1df;border-color:var(--green)}.p90-opts .wrong{background:#fbe1e1;border-color:var(--red)}
+  .p90-fb{text-align:center;color:var(--muted);margin:8px 0}
+  .p90-res{text-align:center;font-weight:700;padding:14px;border-radius:12px;background:#fff4e0;margin-bottom:10px}.p90-res.good{background:#e6f4e6;color:var(--green)}
+  .p90-btn{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px 12px;font-size:14px}.p90-btn.main{background:var(--red);color:#fff;border-color:var(--red)}
+  .p90-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+  .p90-hw{width:220px;height:220px;margin:0 auto;border:2px dashed var(--line);border-radius:12px;background:#fff}
+  .p90-say{text-align:center;background:var(--paper);border-radius:12px;padding:12px;line-height:1.6}
   .p90-grid .full{background:var(--green);color:#fff}.p90-grid .half{background:#f6e3b4}.p90-grid .cur{outline:2px solid var(--red)}
 </style>
 </head>
@@ -1710,6 +1723,10 @@ function renderPlan90(){
     ${D.sent.map(s=>`<div class="p90-s"><div><b>${s[0]}</b><br>${s[1]}<br><small>${s[2]}</small></div><button class="speak-btn" data-say="${s[0]}">🔊</button><button class="speak-btn slow" data-say="${s[0]}" data-slow="1">🐢</button></div>`).join("")}
     ${(!D.final&&D.dt===0)?`<p><small>📐 Ngữ pháp tuần: ${D.W.f}</small></p>`:""}
   </div>
+  <div class="p90-card"><h4>🏋️ Bài tập hôm nay</h4>
+    <div class="p90-extabs">${[["nghe","🎧 Nghe"],["doc","📖 Đọc"],["viet","✍️ Viết"],["noi","🎤 Nói"]].map(([k,l])=>`<button data-ex="${k}" class="${k===p90Ex?"on":""}">${l}${p90ExDone(idx,k)?" ✓":""}</button>`).join("")}</div>
+    <div id="p90ExBox"></div>
+  </div>
   <div class="p90-card"><h4>✔️ 4 kỹ năng hôm nay (${dl.length}/4)</h4>
     ${D.tasks.map((t,k)=>`<label class="p90-t ${dl.includes(k)?"ok":""}"><input type="checkbox" data-k="${k}" ${dl.includes(k)?"checked":""}>
       <span class="p90-tag" style="background:${tag[t[1]]}">${t[1]}</span>
@@ -1728,7 +1745,85 @@ function renderPlan90(){
   document.getElementById("p90Next").onclick=()=>{p90View=idx+1;renderPlan90();};
   document.getElementById("p90Note").onchange=e=>{const x=p90Load();x.notes=x.notes||{};x.notes[idx]=e.target.value;p90Save(x);};
   document.getElementById("p90Start").onchange=e=>{if(!e.target.value)return;if(!confirm("Đổi ngày bắt đầu?"))return renderPlan90();const x=p90Load();x.start=e.target.value;p90Save(x);p90View=null;renderPlan90();};
+  box.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{p90Ex=b.dataset.ex;box.querySelectorAll("[data-ex]").forEach(x=>x.classList.toggle("on",x===b));p90RunEx(D,idx);});
+  p90RunEx(D,idx);
 }
+/* ===== BÀI TẬP TƯƠNG TÁC ===== */
+let p90Ex="nghe";
+const P90_EXK={nghe:0,viet:1,doc:2,noi:3};
+function p90ExDone(idx,k){const d=p90Load();return ((d.done||{})[idx]||[]).includes(P90_EXK[k]);}
+function p90Tick(idx,ex){
+  const x=p90Load();x.done=x.done||{};const k=P90_EXK[ex];x.done[idx]=[...new Set([...(x.done[idx]||[]),k])];p90Save(x);
+  const c=document.querySelector(`#plan90View input[data-k="${k}"]`);if(c){c.checked=true;c.closest("label").classList.add("ok");}
+  const t=document.querySelector(`#plan90View [data-ex="${ex}"]`);if(t&&!t.textContent.includes("✓"))t.textContent+=" ✓";
+  if(x.done[idx].length>=4)setTimeout(renderPlan90,1500);
+}
+function p90Shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function p90Pool(D){
+  const all=P90_WEEKS.flatMap(w=>w.w), week=D.final?all:D.W.w, today=D.final?p90Shuffle(all).slice(0,5):D.words;
+  const qs=p90Shuffle([...today,...today,...p90Shuffle(week)]).filter((w,i,a)=>i===0||a[i-1][0]!==w[0]).slice(0,5);
+  return {all,qs};
+}
+function p90Choice(D,idx,ex){
+  const box=document.getElementById("p90ExBox"), {all,qs}=p90Pool(D); let n=0,score=0;
+  const step=()=>{
+    if(n>=qs.length){const ok=score>=4;box.innerHTML=`<div class="p90-res ${ok?"good":""}">${ok?"🎉":"💪"} Đúng ${score}/${qs.length}. ${ok?"Đạt! Đã tick kỹ năng.":"Cần đúng 4/5 — làm lại nhé."}</div><button class="p90-btn" id="p90Again">↻ Làm lại</button>`;
+      if(ok)p90Tick(idx,ex);document.getElementById("p90Again").onclick=()=>p90Choice(D,idx,ex);return;}
+    const q=qs[n], opts=p90Shuffle([q,...p90Shuffle(all.filter(w=>w[0]!==q[0]&&w[2]!==q[2])).slice(0,3)]);
+    box.innerHTML=`<p class="p90-q"><small>Câu ${n+1}/${qs.length}</small><br>${ex==="nghe"?`Nghe và chọn chữ đúng <button class="speak-btn" id="p90Play">🔊</button><button class="speak-btn slow" id="p90PlayS">🐢</button>`:`Chữ này nghĩa là gì?<br><span class="p90-big">${q[0]}</span>`}</p>
+      <div class="p90-opts">${opts.map(o=>`<button data-o="${o[0]}">${ex==="nghe"?`<span class="p90-hz2">${o[0]}</span>`:o[2]}</button>`).join("")}</div>`;
+    if(ex==="nghe"){const p=()=>speak(q[0],0.72);p();document.getElementById("p90Play").onclick=p;document.getElementById("p90PlayS").onclick=()=>speak(q[0],0.4);}
+    box.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{
+      const right=b.dataset.o===q[0]; if(right)score++;
+      box.querySelectorAll("[data-o]").forEach(x=>{x.disabled=true;if(x.dataset.o===q[0])x.classList.add("right");});
+      if(!right)b.classList.add("wrong");
+      box.insertAdjacentHTML("beforeend",`<p class="p90-fb">${q[0]} · ${q[1]} · ${q[2]}</p>`);
+      if(ex==="doc")speak(q[0],0.72);
+      setTimeout(()=>{n++;step();},right?900:1900);
+    });
+  };step();
+}
+function p90Write(D,idx){
+  const box=document.getElementById("p90ExBox");
+  const chars=[...new Set(D.words.map(w=>w[0]).join("").replace(/[^一-鿿]/g,""))].slice(0,4);
+  let i=0,miss=0;
+  const step=()=>{
+    if(i>=chars.length){box.innerHTML=`<div class="p90-res good">🎉 Viết xong ${chars.length} chữ (sai ${miss} nét). Đã tick VIẾT.</div><button class="p90-btn" id="p90Again">↻ Viết lại</button>`;p90Tick(idx,"viet");document.getElementById("p90Again").onclick=()=>p90Write(D,idx);return;}
+    const ch=chars[i];
+    box.innerHTML=`<p class="p90-q"><small>Chữ ${i+1}/${chars.length}</small> — Tự viết theo đúng thứ tự nét vào ô</p><div id="p90Hw" class="p90-hw"></div>
+      <div class="p90-row"><button class="p90-btn" id="p90Demo">▶ Xem mẫu</button><button class="p90-btn" id="p90Skip">Bỏ qua ›</button></div>`;
+    if(typeof HanziWriter==="undefined"){box.innerHTML+="<p>Chưa tải được bộ viết chữ, cần mạng.</p>";return;}
+    const w=HanziWriter.create("p90Hw",ch,{width:220,height:220,padding:8,showOutline:true,showCharacter:false,strokeColor:"#a8232a",outlineColor:"#eadfcd",drawingWidth:22,highlightColor:"#3f9142"});
+    const quiz=()=>w.quiz({onMistake:()=>miss++,onComplete:()=>{speak(ch,0.72);setTimeout(()=>{i++;step();},900);}});
+    quiz();
+    document.getElementById("p90Demo").onclick=()=>w.animateCharacter({onComplete:quiz});
+    document.getElementById("p90Skip").onclick=()=>{i++;step();};
+  };step();
+}
+function p90Speak(D,idx){
+  const box=document.getElementById("p90ExBox"), SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const items=[...D.sent.map(s=>s),...D.words.slice(0,2)].slice(0,3); let i=0,pass=0;
+  const clean=t=>t.replace(/[^一-鿿]/g,"");
+  const sim=(a,b)=>{a=clean(a);b=clean(b);if(!a.length)return 0;let hit=0;const bb=[...b];for(const c of a){const j=bb.indexOf(c);if(j>-1){hit++;bb.splice(j,1);}}return hit/Math.max(a.length,b.length);};
+  const step=()=>{
+    if(i>=items.length){box.innerHTML=`<div class="p90-res good">🎉 Nói xong ${items.length} câu (${pass} câu máy nghe chuẩn). Đã tick NÓI.</div><button class="p90-btn" id="p90Again">↻ Nói lại</button>`;p90Tick(idx,"noi");document.getElementById("p90Again").onclick=()=>p90Speak(D,idx);return;}
+    const it=items[i];
+    box.innerHTML=`<p class="p90-q"><small>Câu ${i+1}/${items.length}</small> — Nghe mẫu rồi đọc to</p>
+      <div class="p90-say"><b class="p90-hz2">${it[0]}</b><br>${it[1]}<br><small>${it[2]}</small></div>
+      <div class="p90-row"><button class="p90-btn" id="p90Hear">🔊 Nghe mẫu</button>${SR?`<button class="p90-btn main" id="p90Mic">🎤 Bấm và nói</button>`:""}<button class="p90-btn" id="p90Self">${SR?"Bỏ qua ›":"✅ Tôi đã đọc 3 lần ›"}</button></div><p id="p90Heard" class="p90-fb"></p>`;
+    document.getElementById("p90Hear").onclick=()=>speak(it[0],0.6);
+    document.getElementById("p90Self").onclick=()=>{i++;step();};
+    if(SR)document.getElementById("p90Mic").onclick=()=>{
+      const r=new SR();r.lang="zh-CN";r.interimResults=false;r.maxAlternatives=3;const out=document.getElementById("p90Heard");out.textContent="🎙️ Đang nghe...";
+      r.onresult=e=>{const alts=[...e.results[0]].map(a=>a.transcript);const best=Math.max(...alts.map(a=>sim(it[0],a)));const pct=Math.round(best*100);
+        out.innerHTML=`Máy nghe: <b>${alts[0]}</b> — khớp ${pct}% ${pct>=70?"✅ Chuẩn!":"❌ Thử lại, nói chậm & rõ thanh điệu"}`;
+        if(pct>=70){pass++;setTimeout(()=>{i++;step();},1500);}};
+      r.onerror=e=>{out.textContent="Không nghe được ("+e.error+"). Cho phép micro hoặc bấm Bỏ qua.";};
+      r.start();
+    };
+  };step();
+}
+function p90RunEx(D,idx){({nghe:()=>p90Choice(D,idx,"nghe"),doc:()=>p90Choice(D,idx,"doc"),viet:()=>p90Write(D,idx),noi:()=>p90Speak(D,idx)})[p90Ex]();}
 renderPlan90();
 </script>
 

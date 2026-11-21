@@ -255,7 +255,7 @@
   .p90-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
   .p90-hw{width:220px;height:220px;margin:0 auto;border:2px dashed var(--line);border-radius:12px;background:#fff}
   .p90-say{text-align:center;background:var(--paper);border-radius:12px;padding:12px;line-height:1.6}
-  .p90-jump{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:12px}.p90-jump .p90-btn{padding:14px 8px;font-size:15px;font-weight:700}
+  .p90-jump{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:12px}.p90-jump .p90-btn{padding:14px 8px;font-size:15px;font-weight:700}
   .p90-songt{text-align:center;background:var(--paper);border-radius:12px;padding:10px;line-height:1.6}
   .p90-yt{display:block;text-align:center;text-decoration:none;margin-top:10px}
   .p90-grid .full{background:var(--green);color:#fff}.p90-grid .half{background:#f6e3b4}.p90-grid .cur{outline:2px solid var(--red)}
@@ -1738,7 +1738,7 @@ function renderPlan90(){
   <div class="p90-nav"><button id="p90Prev" ${idx<=0?"disabled":""}>◀</button>
     <div><b>Ngày ${idx+1}${idx===today?" · HÔM NAY":""}</b><br><small>Tuần ${D.wk+1}: ${D.W.t} — ${D.type}</small></div>
     <button id="p90Next" ${idx>=89?"disabled":""}>▶</button></div>
-  <div class="p90-jump"><button class="p90-btn main" onclick="document.getElementById('p90ExCard').scrollIntoView({behavior:'smooth'})">🏋️ Làm bài tập ngay ↓</button><button class="p90-btn" onclick="document.querySelector('.p90-song').scrollIntoView({behavior:'smooth'})">🎵 Bài hát ↓</button></div>
+  <div class="p90-jump"><button class="p90-btn main" onclick="document.getElementById('p90ExCard').scrollIntoView({behavior:'smooth'})">🏋️ Làm bài tập ngay ↓</button><button class="p90-btn" onclick="document.querySelector('.p90-song').scrollIntoView({behavior:'smooth'})">🎵 Bài hát</button><button class="p90-btn" onclick="document.querySelector('.p90-film').scrollIntoView({behavior:'smooth'})">🎬 Phim</button></div>
   <div class="p90-card"><h4>📚 Bài hôm nay</h4>
     ${D.words.map(w=>`<div class="p90-w"><span class="p90-hz">${w[0]}</span><span>${w[1]}<br><small>${w[2]}</small></span><button class="speak-btn" data-say="${w[0]}">🔊</button></div>`).join("")}
     ${D.sent.map(s=>`<div class="p90-s"><div><b>${s[0]}</b><br>${s[1]}<br><small>${s[2]}</small></div><button class="speak-btn" data-say="${s[0]}">🔊</button><button class="speak-btn slow" data-say="${s[0]}" data-slow="1">🐢</button></div>`).join("")}
@@ -1756,6 +1756,12 @@ function renderPlan90(){
     <div class="p90-row" style="justify-content:flex-start">${sg[4].map(w=>`<button class="p90-btn" data-say="${w[0]}">${w[0]} <small>${w[1]} · ${w[2]}</small></button>`).join("")}</div>
     <a class="p90-btn main p90-yt" href="https://www.youtube.com/results?search_query=${q}" target="_blank" rel="noopener">▶ Nghe trên YouTube (có lời Pinyin)</a>
     <p><small>🎧 Cách nghe 3 lượt (10 phút, giờ trưa hoặc lúc lái xe): ① nghe không nhìn lời, bắt các từ quen ② nhìn lời Pinyin, nghe lại ③ hát theo điệp khúc 2 lần.</small></p>
+  </div>`;})()}
+  ${(()=>{const fm=P90_FILMS[D.wk];return `<div class="p90-card p90-film"><h4>🎬 Phim tuần ${D.wk+1} · luyện nghe</h4>
+    <div class="p90-songt"><span class="p90-hz2">${fm[0]}</span><br>${fm[1]}<br><small>${fm[2]} · ${"⭐".repeat(fm[4])}</small></div>
+    <p><small>${fm[3]}</small></p>
+    <a class="p90-btn main p90-yt" href="https://www.youtube.com/results?search_query=${encodeURIComponent(fm[5])}" target="_blank" rel="noopener">▶ Xem trên YouTube</a>
+    <p><small>🎬 Cách xem 1 đoạn 5–10 phút (tối, thay lướt mạng): ① xem phụ đề Việt để hiểu chuyện ② xem lại chỉ phụ đề Trung/Pinyin, bấm dừng ở câu quen ③ chọn 3 câu ngắn, tua lại nhại theo 5 lần. Ghi câu hay vào ô Ghi chú.</small></p>
   </div>`;})()}
   <div class="p90-card"><h4>✔️ 4 kỹ năng hôm nay (${dl.length}/4)</h4>
     ${D.tasks.map((t,k)=>`<label class="p90-t ${dl.includes(k)?"ok":""}"><input type="checkbox" data-k="${k}" ${dl.includes(k)?"checked":""}>
@@ -1883,6 +1889,21 @@ const P90_SONGS=[
 ["童话","Tónghuà – Đồng thoại","Quang Lương","Bản ballad nổi tiếng, giọng rõ, tốc độ vừa — bước lên trình trung cấp.",[["童话","tónghuà","truyện cổ tích"],["相信","xiāngxìn","tin tưởng"],["幸福","xìngfú","hạnh phúc"]],4],
 ["小幸运","Xiǎo xìngyùn – Hạnh phúc nhỏ","Điền Phức Chân","Nhạc phim nổi tiếng, giọng nữ trong, luyện nghe câu dài.",[["幸运","xìngyùn","may mắn"],["遇见","yùjiàn","gặp gỡ"],["青春","qīngchūn","thanh xuân"]],4],
 ["后来","Hòulái – Về sau","Lưu Nhược Anh","Bài karaoke kinh điển; tổng ôn — nghe hiểu ý chính cả bài.",[["后来","hòulái","về sau"],["终于","zhōngyú","cuối cùng"],["珍惜","zhēnxī","trân trọng"]],4]
+];
+/* ===== PHIM LUYỆN NGHE (dễ → khó) ===== */
+const P90_FILMS=[
+["小猪佩奇","Heo Peppa (Peppa Pig)","Hoạt hình · 5 phút/tập","Câu cực ngắn, nói chậm, toàn từ đời thường. Xem 2 tập/ngày.",1,"小猪佩奇 中文 拼音字幕"],
+["小猪佩奇","Heo Peppa (Peppa Pig)","Hoạt hình · 5 phút/tập","Tuần 2 xem tiếp, thử tắt phụ đề Việt, chỉ để chữ Trung.",1,"小猪佩奇 中文 拼音字幕"],
+["成长汉语","Growing Up with Chinese (CCTV)","Phim dạy tiếng Trung · 15 phút","Chương trình CCTV cho người mới: mỗi tập 1 tình huống, có giải thích.",2,"成长汉语 Growing Up with Chinese"],
+["成长汉语","Growing Up with Chinese (CCTV)","Phim dạy tiếng Trung · 15 phút","Xem các tập về ăn uống, mời khách — khớp chủ đề tuần 4.",2,"成长汉语 Growing Up with Chinese 吃饭"],
+["家有儿女","Gia đình là số 1 bản Trung (Home with Kids)","Sitcom gia đình · 25 phút","Hội thoại đời thường, giọng phổ thông chuẩn, vui dễ xem.",2,"家有儿女 第一部 第1集"],
+["家有儿女","Home with Kids","Sitcom gia đình · 25 phút","Chọn 1 cảnh 5 phút, xem 3 lượt theo cách bên dưới.",2,"家有儿女 第一部"],
+["爱情公寓","Chung cư tình yêu (iPartment)","Sitcom trẻ · 25 phút","Câu nói nhanh hơn, nhiều câu giao tiếp hằng ngày của giới trẻ.",3,"爱情公寓 第一季 第1集"],
+["欢乐颂","Hoan lạc tụng (Ode to Joy)","Phim công sở · 45 phút","5 cô gái đi làm ở Thượng Hải — nhiều cảnh văn phòng, gặp sếp.",3,"欢乐颂 第1集"],
+["杜拉拉升职记","Đỗ Lạp Lạp thăng chức (Go Lala Go)","Phim công sở · 45 phút","Công ty nước ngoài, họp hành, báo cáo — từ vựng thương mại.",3,"杜拉拉升职记 电视剧 第1集"],
+["杜拉拉升职记","Go Lala Go","Phim công sở · 45 phút","Xem cảnh họp, đàm phán; ghi 5 câu dùng được với đối tác.",4,"杜拉拉升职记 电视剧"],
+["理想之城","Thành phố lý tưởng (Ideal City)","Phim xây dựng · kinh doanh","Đấu thầu, báo giá, công trường — gần ngành cơ điện, nhà xưởng.",4,"理想之城 第1集"],
+["我的前半生","Nửa đời trước của tôi","Phim tâm lý · công sở","Tổng ôn: thử xem 10 phút không phụ đề Việt, hiểu ý chính.",4,"我的前半生 第1集"]
 ];
 /* ===== BÀI TẬP TƯƠNG TÁC ===== */
 let p90Ex="nghe";

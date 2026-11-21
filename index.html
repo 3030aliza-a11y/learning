@@ -256,6 +256,8 @@
   .p90-hw{width:220px;height:220px;margin:0 auto;border:2px dashed var(--line);border-radius:12px;background:#fff}
   .p90-say{text-align:center;background:var(--paper);border-radius:12px;padding:12px;line-height:1.6}
   .p90-jump{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:12px}.p90-jump .p90-btn{padding:14px 8px;font-size:15px;font-weight:700}
+  .p90-exnav{border-top:1px dashed var(--line);padding-top:10px;margin-top:14px}.p90-exnav .p90-btn{flex:1;padding:12px}
+  .p90-guide{background:#f3f8ff;border-left:4px solid #2b7bd1;border-radius:8px;padding:10px;margin-bottom:12px;font-size:14px;line-height:1.5}
   .p90-month{margin:14px 0 6px;font-weight:700;color:var(--red);font-size:14px}
   .p90-wk{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:6px}.p90-wk.curwk{border-color:var(--red);background:#fff8f3}
   .p90-wkt{font-size:13px;margin-bottom:6px;display:flex;gap:4px}.p90-wkt span{margin-left:auto;color:var(--green);font-weight:700}
@@ -1725,7 +1727,7 @@ function p90Day(i){
       "Nghe bài hát tuần (khung 🎵): lượt 1 không nhìn lời, lượt 2 nhìn lời Pinyin.",
       "Nghe tốc độ nhanh: ▶ Nghe cả đoạn rồi trả lời to bằng tiếng Việt: A hỏi gì? B trả lời gì?",
       "Chính tả: nghe hội thoại + 3 mẫu câu tuần, chép Pinyin ra giấy không nhìn, rồi đối chiếu."][dt],(wk===0&&dt<3)?"pinyin":null],
-    ["Sáng","VIẾT",dt===4?15:10,dt===4?"Viết tay lại các chữ tuần này + gõ Pinyin 1 đoạn 4–6 câu về chủ đề tuần.":"Viết tay đúng bút thuận: "+chars.join(" ")+" (mỗi chữ 5 lần, tab Luyện viết).","write"],
+    ["Sáng","VIẾT",dt===4?15:10,dt===4?"Viết tay lại các chữ tuần này + gõ Pinyin 1 đoạn 4–6 câu về chủ đề tuần.":"Viết tay đúng bút thuận: "+chars.join(" ")+" — viết trên giấy 5 lần/chữ, rồi viết vào ô bên dưới.","write"],
     ["Trưa","ĐỌC",20,dt>=5?"Thẻ ghi nhớ ôn hết từ của tuần (tắt Pinyin) + Trắc nghiệm.":"Che nghĩa, đọc to từ & câu hôm nay; ôn thẻ ghi nhớ từ hôm trước.",dt>=5?"quiz":"flash"],
     ["Tối","NÓI",30,dt===6?"Tự kiểm tra: nói 1 phút về \""+W.t+"\" không nhìn bài, ghi âm. Đạt khi nói trôi 5 câu.":dt===5?"Đóng vai với AI (ChatGPT giọng nói) tình huống \""+W.t+"\" 10 phút + gõ 5 tin nhắn WeChat.":"Đóng vai hội thoại ngày "+(i+1)+": nói vai A rồi vai B, mỗi vai 5 lần (\""+p90Dlg(i)[0][0]+"\"); gõ Pinyin cả đoạn trên điện thoại.",dt===3?"convo":null]];
   return {wk,dt,W,final,words,sent,tasks,type:final?"Tổng ôn thực chiến":P90_DAYTYPE[dt]};
@@ -1768,6 +1770,7 @@ function renderPlan90(){
   </div>
   <div class="p90-card" id="p90ExCard"><h4>🏋️ Bài tập hôm nay</h4>
     <div class="p90-extabs">${[["nghe","🎧 Nghe"],["doc","📖 Đọc"],["viet","✍️ Viết"],["noi","🎤 Nói"]].map(([k,l])=>`<button data-ex="${k}" class="${k===p90Ex?"on":""}">${l}${p90ExDone(idx,k)?" ✓":""}</button>`).join("")}</div>
+    <div id="p90ExGuide" class="p90-guide"></div>
     <div id="p90ExBox"></div>
     <div class="p90-row p90-exnav"><button class="p90-btn" id="p90ExPrev">◀ Phần trước</button><button class="p90-btn main" id="p90ExNext">Phần tiếp ▶</button></div>
     ${dl.length>=4?'<div class="p90-ok">🎉 Đạt ngày '+(idx+1)+'! Sếp giỏi quá.</div>':'<p><small>Xong '+dl.length+'/4 phần · làm đạt cả 4 phần là hoàn thành ngày.</small></p>'}
@@ -1798,6 +1801,11 @@ function renderPlan90(){
   box.querySelectorAll("[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();const b=document.querySelector(`nav button[data-tab="${a.dataset.go}"]`);if(b)b.click();});
   const goDay=d=>{p90View=d;renderPlan90();const n=document.querySelector("#plan90View .p90-nav");if(n)n.scrollIntoView({behavior:"smooth",block:"start"});};
   box.querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>goDay(+b.dataset.day));
+  const exOrder=["nghe","doc","viet","noi"],exGo=s=>{p90Ex=exOrder[(exOrder.indexOf(p90Ex)+s+4)%4];box.querySelectorAll("[data-ex]").forEach(x=>x.classList.toggle("on",x.dataset.ex===p90Ex));p90RunEx(D,idx);document.getElementById("p90ExCard").scrollIntoView({behavior:"smooth"});};
+  document.getElementById("p90ExPrev").onclick=()=>exGo(-1);
+  document.getElementById("p90ExNext").onclick=()=>exGo(1);
+  const dp=document.getElementById("p90DayPrev"),dn=document.getElementById("p90DayNext");
+  if(dp)dp.onclick=()=>{p90Ex="nghe";goDay(idx-1);};if(dn)dn.onclick=()=>{p90Ex="nghe";goDay(idx+1);};
   document.getElementById("p90Prev").onclick=()=>goDay(idx-1);
   document.getElementById("p90Next").onclick=()=>goDay(idx+1);
   document.getElementById("p90Note").onchange=e=>{const x=p90Load();x.notes=x.notes||{};x.notes[idx]=e.target.value;p90Save(x);};
@@ -2085,7 +2093,15 @@ function p90Speak(D,idx){
   };step();
 }
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{try{if(typeof convoStop==="function")convoStop();else speechSynthesis.cancel();}catch(e){}}));
-function p90RunEx(D,idx){({nghe:()=>p90Choice(D,idx,"nghe"),doc:()=>p90Choice(D,idx,"doc"),viet:()=>p90Write(D,idx),noi:()=>p90Speak(D,idx)})[p90Ex]();}
+const P90_EXINFO={
+ nghe:["🎧 NGHE","Rèn tai nhận ra âm & thanh điệu, hiểu câu khi chỉ nghe.","Bài tập: 10 câu — nghe từ chọn chữ, nghe từ chọn nghĩa, nghe câu hội thoại chọn nghĩa. Đạt khi đúng 8/10.",0],
+ doc:["📖 ĐỌC","Rèn nhận mặt chữ Hán không cần Pinyin.","Bài tập: 10 câu — nhìn chữ chọn nghĩa, nhìn Pinyin chọn chữ, đọc câu chữ Hán chọn nghĩa. Đạt khi đúng 8/10.",2],
+ viet:["✍️ VIẾT","Rèn viết tay đúng thứ tự nét và đặt câu đúng trật tự từ.","Bài tập: tự viết các chữ hôm nay vào ô (sai nét app báo) → ghép các mảnh thành câu đúng.",1],
+ noi:["🎤 NÓI","Rèn phát âm chuẩn và phản xạ nói câu hoàn chỉnh.","Bài tập: nghe mẫu từng câu hội thoại → bấm 🎤 đọc to, máy chấm % khớp (≥70% là chuẩn).",3]};
+function p90RunEx(D,idx){
+  const g=document.getElementById("p90ExGuide"),I=P90_EXINFO[p90Ex],t=D.tasks[I[3]];
+  if(g)g.innerHTML=`<b>${I[0]} · ${t?t[0]+" "+t[2]+" phút":""}</b><br>🎯 ${I[1]}<br>📌 Hôm nay: ${t?t[3]:""}<br>📝 ${I[2]}`;
+  ({nghe:()=>p90Choice(D,idx,"nghe"),doc:()=>p90Choice(D,idx,"doc"),viet:()=>p90Write(D,idx),noi:()=>p90Speak(D,idx)})[p90Ex]();}
 renderPlan90();
 </script>
 

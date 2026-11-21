@@ -255,6 +255,8 @@
   .p90-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
   .p90-hw{width:220px;height:220px;margin:0 auto;border:2px dashed var(--line);border-radius:12px;background:#fff}
   .p90-say{text-align:center;background:var(--paper);border-radius:12px;padding:12px;line-height:1.6}
+  .p90-songt{text-align:center;background:var(--paper);border-radius:12px;padding:10px;line-height:1.6}
+  .p90-yt{display:block;text-align:center;text-decoration:none;margin-top:10px}
   .p90-grid .full{background:var(--green);color:#fff}.p90-grid .half{background:#f6e3b4}.p90-grid .cur{outline:2px solid var(--red)}
 </style>
 </head>
@@ -1727,6 +1729,13 @@ function renderPlan90(){
     <div class="p90-extabs">${[["nghe","🎧 Nghe"],["doc","📖 Đọc"],["viet","✍️ Viết"],["noi","🎤 Nói"]].map(([k,l])=>`<button data-ex="${k}" class="${k===p90Ex?"on":""}">${l}${p90ExDone(idx,k)?" ✓":""}</button>`).join("")}</div>
     <div id="p90ExBox"></div>
   </div>
+  ${(()=>{const sg=P90_SONGS[D.wk],q=encodeURIComponent(sg[0]+" "+sg[2]+" pinyin lyrics");return `<div class="p90-card p90-song"><h4>🎵 Bài hát tuần ${D.wk+1} · luyện nghe</h4>
+    <div class="p90-songt"><span class="p90-hz2">${sg[0]}</span><br>${sg[1]} · <small>${sg[2]} · ${"⭐".repeat(sg[5])}</small></div>
+    <p><small>${sg[3]}</small></p>
+    <div class="p90-row" style="justify-content:flex-start">${sg[4].map(w=>`<button class="p90-btn" data-say="${w[0]}">${w[0]} <small>${w[1]} · ${w[2]}</small></button>`).join("")}</div>
+    <a class="p90-btn main p90-yt" href="https://www.youtube.com/results?search_query=${q}" target="_blank" rel="noopener">▶ Nghe trên YouTube (có lời Pinyin)</a>
+    <p><small>🎧 Cách nghe 3 lượt (10 phút, giờ trưa hoặc lúc lái xe): ① nghe không nhìn lời, bắt các từ quen ② nhìn lời Pinyin, nghe lại ③ hát theo điệp khúc 2 lần.</small></p>
+  </div>`;})()}
   <div class="p90-card"><h4>✔️ 4 kỹ năng hôm nay (${dl.length}/4)</h4>
     ${D.tasks.map((t,k)=>`<label class="p90-t ${dl.includes(k)?"ok":""}"><input type="checkbox" data-k="${k}" ${dl.includes(k)?"checked":""}>
       <span class="p90-tag" style="background:${tag[t[1]]}">${t[1]}</span>
@@ -1748,6 +1757,21 @@ function renderPlan90(){
   box.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{p90Ex=b.dataset.ex;box.querySelectorAll("[data-ex]").forEach(x=>x.classList.toggle("on",x===b));p90RunEx(D,idx);});
   p90RunEx(D,idx);
 }
+/* ===== BÀI HÁT LUYỆN NGHE (1 bài/tuần, dễ → khó) ===== */
+const P90_SONGS=[
+["两只老虎","Liǎng zhī lǎohǔ – Hai con hổ","Đồng dao",'Giai điệu "Kìa con bướm vàng" — sếp đã thuộc nhạc, chỉ cần nghe lời. Rất chậm, lặp nhiều.',[["两","liǎng","hai"],["老虎","lǎohǔ","con hổ"],["跑","pǎo","chạy"]],1],
+["找朋友","Zhǎo péngyou – Tìm bạn","Đồng dao","Bài thiếu nhi kinh điển, câu ngắn: chào, bắt tay, bạn tốt — khớp tuần chào hỏi.",[["朋友","péngyou","bạn"],["敬礼","jìnglǐ","chào"],["握手","wòshǒu","bắt tay"]],1],
+["祝你生日快乐","Zhù nǐ shēngrì kuàilè – Chúc mừng sinh nhật","Phổ biến","Hát được ngay trong tiệc sinh nhật đối tác. Luyện thanh điệu 生日快乐.",[["祝","zhù","chúc"],["生日","shēngrì","sinh nhật"],["快乐","kuàilè","vui vẻ"]],1],
+["恭喜恭喜","Gōngxǐ gōngxǐ – Chúc mừng","Nhạc Tết","Bài Tết ai cũng biết; dùng để chúc đối tác dịp năm mới.",[["恭喜","gōngxǐ","chúc mừng"],["新年","xīnnián","năm mới"],["好","hǎo","tốt"]],2],
+["月亮代表我的心","Yuèliang dàibiǎo wǒ de xīn – Ánh trăng nói hộ lòng tôi","Đặng Lệ Quân",'Chậm, phát âm cực chuẩn. Bài karaoke "quốc dân" khi tiếp khách Trung Quốc.',[["月亮","yuèliang","mặt trăng"],["代表","dàibiǎo","đại diện"],["心","xīn","trái tim"]],2],
+["甜蜜蜜","Tiánmìmì – Ngọt ngào","Đặng Lệ Quân","Giai điệu quen thuộc với người Việt, từ lặp nhiều, dễ bắt tai.",[["甜","tián","ngọt"],["笑","xiào","cười"],["梦","mèng","giấc mơ"]],2],
+["朋友","Péngyou – Bạn bè","Châu Hoa Kiện","Bài hát về tình bạn, hay hát ở bàn tiệc khi chốt hợp tác.",[["朋友","péngyou","bạn"],["一生","yìshēng","cả đời"],["一起走","yìqǐ zǒu","cùng đi"]],3],
+["老鼠爱大米","Lǎoshǔ ài dàmǐ – Chuột yêu gạo","Dương Thần Cương","Bài cực hot ở Việt Nam, điệp khúc dễ thuộc, nhịp vừa.",[["爱","ài","yêu"],["大米","dàmǐ","gạo"],["永远","yǒngyuǎn","mãi mãi"]],3],
+["一剪梅","Yì jiǎn méi – Nhất tiễn mai","Phí Ngọc Thanh","Hát rất chậm, ngân dài từng chữ — tuyệt cho luyện thanh điệu.",[["雪","xuě","tuyết"],["真情","zhēnqíng","chân tình"],["梅","méi","hoa mai"]],3],
+["童话","Tónghuà – Đồng thoại","Quang Lương","Bản ballad nổi tiếng, giọng rõ, tốc độ vừa — bước lên trình trung cấp.",[["童话","tónghuà","truyện cổ tích"],["相信","xiāngxìn","tin tưởng"],["幸福","xìngfú","hạnh phúc"]],4],
+["小幸运","Xiǎo xìngyùn – Hạnh phúc nhỏ","Điền Phức Chân","Nhạc phim nổi tiếng, giọng nữ trong, luyện nghe câu dài.",[["幸运","xìngyùn","may mắn"],["遇见","yùjiàn","gặp gỡ"],["青春","qīngchūn","thanh xuân"]],4],
+["后来","Hòulái – Về sau","Lưu Nhược Anh","Bài karaoke kinh điển; tổng ôn — nghe hiểu ý chính cả bài.",[["后来","hòulái","về sau"],["终于","zhōngyú","cuối cùng"],["珍惜","zhēnxī","trân trọng"]],4]
+];
 /* ===== BÀI TẬP TƯƠNG TÁC ===== */
 let p90Ex="nghe";
 const P90_EXK={nghe:0,viet:1,doc:2,noi:3};

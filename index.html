@@ -1694,7 +1694,7 @@ function p90Day(i){
     ["Sáng","NGHE",10,dt===6?"Nghe lại 3 mẫu câu tuần, chép chính tả Pinyin không nhìn.":"Bấm 🔊 nghe từng từ/câu hôm nay 5 lần, shadowing (nhại theo) đúng thanh điệu.",(wk===0&&dt<3)?"pinyin":null],
     ["Sáng","VIẾT",dt===4?15:10,dt===4?"Viết tay lại các chữ tuần này + gõ Pinyin 1 đoạn 4–6 câu về chủ đề tuần.":"Viết tay đúng bút thuận: "+chars.join(" ")+" (mỗi chữ 5 lần, tab Luyện viết).","write"],
     ["Trưa","ĐỌC",20,dt>=5?"Thẻ ghi nhớ ôn hết từ của tuần (tắt Pinyin) + Trắc nghiệm.":"Che nghĩa, đọc to từ & câu hôm nay; ôn thẻ ghi nhớ từ hôm trước.",dt>=5?"quiz":"flash"],
-    ["Tối","NÓI",30,dt===6?"Tự kiểm tra: nói 1 phút về \""+W.t+"\" không nhìn bài, ghi âm. Đạt khi nói trôi 5 câu.":dt===5?"Đóng vai với AI (ChatGPT giọng nói) tình huống \""+W.t+"\" 10 phút + gõ 5 tin nhắn WeChat.":"Nói to mẫu câu 10 lần, tự đặt 3 câu mới thay bằng từ hôm nay; gõ Pinyin 5 câu trên điện thoại.",dt===3?"convo":null]];
+    ["Tối","NÓI",30,dt===6?"Tự kiểm tra: nói 1 phút về \""+W.t+"\" không nhìn bài, ghi âm. Đạt khi nói trôi 5 câu.":dt===5?"Đóng vai với AI (ChatGPT giọng nói) tình huống \""+W.t+"\" 10 phút + gõ 5 tin nhắn WeChat.":"Đóng vai hội thoại ngày "+(i+1)+": nói vai A rồi vai B, mỗi vai 5 lần (\""+p90Dlg(i)[0][0]+"\"); gõ Pinyin cả đoạn trên điện thoại.",dt===3?"convo":null]];
   return {wk,dt,W,final,words,sent,tasks,type:final?"Tổng ôn thực chiến":P90_DAYTYPE[dt]};
 }
 const P90_MILESTONE=[[30,"Hết tháng 1: ~120 từ, chào hỏi – giới thiệu – số – ăn uống, viết ~35 chữ."],[60,"Hết tháng 2: ~200 từ, hẹn lịch WeChat, đón khách, giới thiệu công ty, hỏi giá."],[90,"Hết tháng 3: ~300 từ ≈ HSK 2, tự tin giao tiếp hội chợ & nhà xưởng."]];
@@ -1726,6 +1726,8 @@ function renderPlan90(){
     ${D.words.map(w=>`<div class="p90-w"><span class="p90-hz">${w[0]}</span><span>${w[1]}<br><small>${w[2]}</small></span><button class="speak-btn" data-say="${w[0]}">🔊</button></div>`).join("")}
     ${D.sent.map(s=>`<div class="p90-s"><div><b>${s[0]}</b><br>${s[1]}<br><small>${s[2]}</small></div><button class="speak-btn" data-say="${s[0]}">🔊</button><button class="speak-btn slow" data-say="${s[0]}" data-slow="1">🐢</button></div>`).join("")}
     ${(!D.final&&D.dt===0)?`<p><small>📐 Ngữ pháp tuần: ${D.W.f}</small></p>`:""}
+    <h4 style="margin-top:14px">💬 Hội thoại ngày ${idx+1} <button class="speak-btn" id="p90DlgAll">▶ Nghe cả đoạn</button></h4>
+    ${p90Dlg(idx).map((l,k)=>`<div class="p90-s"><div><b>${k%2?"B":"A"}: ${l[0]}</b><br>${l[1]}<br><small>${l[2]}</small></div><button class="speak-btn" data-say="${l[0]}">🔊</button><button class="speak-btn slow" data-say="${l[0]}" data-slow="1">🐢</button></div>`).join("")}
   </div>
   <div class="p90-card" id="p90ExCard"><h4>🏋️ Bài tập hôm nay</h4>
     <div class="p90-extabs">${[["nghe","🎧 Nghe"],["doc","📖 Đọc"],["viet","✍️ Viết"],["noi","🎤 Nói"]].map(([k,l])=>`<button data-ex="${k}" class="${k===p90Ex?"on":""}">${l}${p90ExDone(idx,k)?" ✓":""}</button>`).join("")}</div>
@@ -1756,9 +1758,98 @@ function renderPlan90(){
   document.getElementById("p90Next").onclick=()=>{p90View=idx+1;renderPlan90();};
   document.getElementById("p90Note").onchange=e=>{const x=p90Load();x.notes=x.notes||{};x.notes[idx]=e.target.value;p90Save(x);};
   document.getElementById("p90Start").onchange=e=>{if(!e.target.value)return;if(!confirm("Đổi ngày bắt đầu?"))return renderPlan90();const x=p90Load();x.start=e.target.value;p90Save(x);p90View=null;renderPlan90();};
+  document.getElementById("p90DlgAll").onclick=()=>{const L=p90Dlg(idx);let k=0;const nx=()=>{if(k>=L.length)return;const u=new SpeechSynthesisUtterance(L[k][0]);u.lang="zh-CN";u.rate=0.65;u.onend=()=>{k++;setTimeout(nx,500);};speechSynthesis.speak(u);};speechSynthesis.cancel();nx();};
   box.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{p90Ex=b.dataset.ex;box.querySelectorAll("[data-ex]").forEach(x=>x.classList.toggle("on",x===b));p90RunEx(D,idx);});
   p90RunEx(D,idx);
 }
+/* ===== HỘI THOẠI RIÊNG MỖI NGÀY (12 tuần × 7) ===== */
+const P90_DLG=[
+[ [["你好！","Nǐ hǎo!","Chào bạn!"],["你好！","Nǐ hǎo!","Chào bạn!"]],
+  [["早上好！","Zǎoshang hǎo!","Chào buổi sáng!"],["早上好！您好吗？","Zǎoshang hǎo! Nín hǎo ma?","Chào buổi sáng! Ngài khỏe không?"],["我很好，谢谢。","Wǒ hěn hǎo, xièxie.","Tôi khỏe, cảm ơn."]],
+  [["谢谢你！","Xièxie nǐ!","Cảm ơn bạn!"],["不客气。","Bú kèqi.","Không có gì."]],
+  [["对不起！","Duìbuqǐ!","Xin lỗi!"],["没关系。","Méi guānxi.","Không sao."]],
+  [["您好！很高兴认识您。","Nín hǎo! Hěn gāoxìng rènshi nín.","Chào ngài! Rất vui được quen ngài."],["我也很高兴认识您。","Wǒ yě hěn gāoxìng rènshi nín.","Tôi cũng rất vui được quen ngài."]],
+  [["老师好！","Lǎoshī hǎo!","Chào thầy/cô!"],["同学们好！","Tóngxuémen hǎo!","Chào các em!"]],
+  [["再见！明天见！","Zàijiàn! Míngtiān jiàn!","Tạm biệt! Mai gặp!"],["好，明天见！","Hǎo, míngtiān jiàn!","Được, mai gặp!"]] ],
+[ [["您贵姓？","Nín guì xìng?","Ngài họ gì ạ?"],["我姓阮。","Wǒ xìng Ruǎn.","Tôi họ Nguyễn."]],
+  [["你叫什么名字？","Nǐ jiào shénme míngzi?","Bạn tên là gì?"],["我叫Aliza。","Wǒ jiào Aliza.","Tôi tên Aliza."]],
+  [["你是哪国人？","Nǐ shì nǎ guó rén?","Bạn là người nước nào?"],["我是越南人。","Wǒ shì Yuènánrén.","Tôi là người Việt Nam."]],
+  [["您在哪儿工作？","Nín zài nǎr gōngzuò?","Ngài làm việc ở đâu?"],["我在一家机电公司工作。","Wǒ zài yì jiā jīdiàn gōngsī gōngzuò.","Tôi làm ở một công ty cơ điện."]],
+  [["您是经理吗？","Nín shì jīnglǐ ma?","Ngài là giám đốc ạ?"],["是，我是总经理。","Shì, wǒ shì zǒngjīnglǐ.","Vâng, tôi là tổng giám đốc."]],
+  [["这是我的名片。","Zhè shì wǒ de míngpiàn.","Đây là danh thiếp của tôi."],["谢谢，这是我的。","Xièxie, zhè shì wǒ de.","Cảm ơn, đây là của tôi."]],
+  [["我是协会的负责人。","Wǒ shì xiéhuì de fùzérén.","Tôi là người phụ trách hiệp hội."],["请多关照！","Qǐng duō guānzhào!","Mong được giúp đỡ!"]] ],
+[ [["这个多少钱？","Zhège duōshao qián?","Cái này bao nhiêu tiền?"],["五十块。","Wǔshí kuài.","50 tệ."]],
+  [["太贵了，便宜一点吧。","Tài guì le, piányi yìdiǎn ba.","Đắt quá, rẻ chút đi."],["四十块，可以吗？","Sìshí kuài, kěyǐ ma?","40 tệ được không?"]],
+  [["今天几月几号？","Jīntiān jǐ yuè jǐ hào?","Hôm nay ngày mấy tháng mấy?"],["今天十一月二十一号。","Jīntiān shíyī yuè èrshíyī hào.","Hôm nay 21 tháng 11."]],
+  [["今天星期几？","Jīntiān xīngqī jǐ?","Hôm nay thứ mấy?"],["今天星期五。","Jīntiān xīngqīwǔ.","Hôm nay thứ Sáu."]],
+  [["现在几点？","Xiànzài jǐ diǎn?","Bây giờ mấy giờ?"],["现在九点半。","Xiànzài jiǔ diǎn bàn.","Bây giờ 9 giờ rưỡi."]],
+  [["一美元换多少人民币？","Yì měiyuán huàn duōshao rénmínbì?","1 đô đổi bao nhiêu tệ?"],["大概七块。","Dàgài qī kuài.","Khoảng 7 tệ."]],
+  [["我们几点开会？","Wǒmen jǐ diǎn kāihuì?","Mấy giờ chúng ta họp?"],["下午三点见。","Xiàwǔ sān diǎn jiàn.","3 giờ chiều gặp."]] ],
+[ [["晚上一起吃饭吧！","Wǎnshang yìqǐ chīfàn ba!","Tối cùng ăn cơm nhé!"],["好啊，谢谢！","Hǎo a, xièxie!","Được, cảm ơn!"]],
+  [["您想吃什么？","Nín xiǎng chī shénme?","Ngài muốn ăn gì?"],["我想吃越南菜。","Wǒ xiǎng chī Yuènán cài.","Tôi muốn ăn món Việt."]],
+  [["您能吃辣吗？","Nín néng chī là ma?","Ngài ăn cay được không?"],["一点点可以。","Yìdiǎndiǎn kěyǐ.","Một chút thì được."]],
+  [["喝茶还是喝酒？","Hē chá háishi hē jiǔ?","Uống trà hay uống rượu?"],["先喝茶吧。","Xiān hē chá ba.","Uống trà trước đi."]],
+  [["这个菜很好吃！","Zhège cài hěn hǎochī!","Món này ngon quá!"],["您多吃一点。","Nín duō chī yìdiǎn.","Ngài ăn thêm chút nữa."]],
+  [["我们敬您一杯！","Wǒmen jìng nín yì bēi!","Chúng tôi kính ngài một ly!"],["祝合作愉快，干杯！","Zhù hézuò yúkuài, gānbēi!","Chúc hợp tác vui vẻ, cạn ly!"]],
+  [["服务员，买单！","Fúwùyuán, mǎidān!","Phục vụ ơi, tính tiền!"],["今天我请客。","Jīntiān wǒ qǐngkè.","Hôm nay tôi mời."]] ],
+[ [["我们加个微信吧。","Wǒmen jiā gè Wēixìn ba.","Kết bạn WeChat nhé."],["好，我扫您。","Hǎo, wǒ sǎo nín.","Được, tôi quét mã của ngài."]],
+  [["您这周什么时候有空？","Nín zhè zhōu shénme shíhou yǒu kòng?","Tuần này khi nào ngài rảnh?"],["星期三上午有空。","Xīngqīsān shàngwǔ yǒu kòng.","Sáng thứ Tư rảnh."]],
+  [["我们约在十点，可以吗？","Wǒmen yuē zài shí diǎn, kěyǐ ma?","Hẹn 10 giờ được không?"],["没问题。","Méi wèntí.","Không vấn đề."]],
+  [["不好意思，我们改天吧。","Bù hǎoyìsi, wǒmen gǎitiān ba.","Ngại quá, để hôm khác nhé."],["好的，星期五怎么样？","Hǎo de, xīngqīwǔ zěnmeyàng?","Được, thứ Sáu thì sao?"]],
+  [["请发一下地址。","Qǐng fā yíxià dìzhǐ.","Gửi giúp địa chỉ nhé."],["我马上发给您。","Wǒ mǎshàng fā gěi nín.","Tôi gửi ngay."]],
+  [["我想确认一下时间。","Wǒ xiǎng quèrèn yíxià shíjiān.","Tôi muốn xác nhận lại giờ."],["明天上午十点，对吗？","Míngtiān shàngwǔ shí diǎn, duì ma?","10 giờ sáng mai đúng không?"]],
+  [["最近工作忙吗？","Zuìjìn gōngzuò máng ma?","Dạo này công việc bận không?"],["挺忙的，您呢？","Tǐng máng de, nín ne?","Khá bận, còn ngài?"]] ],
+[ [["欢迎来到越南！","Huānyíng láidào Yuènán!","Chào mừng đến Việt Nam!"],["谢谢您来接我。","Xièxie nín lái jiē wǒ.","Cảm ơn ngài đến đón tôi."]],
+  [["路上辛苦了！","Lùshang xīnkǔ le!","Đi đường vất vả rồi!"],["不辛苦，很顺利。","Bù xīnkǔ, hěn shùnlì.","Không vất vả, rất suôn sẻ."]],
+  [["您的行李在这儿吗？","Nín de xíngli zài zhèr ma?","Hành lý của ngài ở đây ạ?"],["对，就这两个。","Duì, jiù zhè liǎng ge.","Đúng, chỉ hai cái này."]],
+  [["司机在外面等我们。","Sījī zài wàimiàn děng wǒmen.","Tài xế đang đợi bên ngoài."],["好的，走吧。","Hǎo de, zǒu ba.","Được, đi thôi."]],
+  [["先去酒店休息一下。","Xiān qù jiǔdiàn xiūxi yíxià.","Về khách sạn nghỉ chút trước."],["好，谢谢安排。","Hǎo, xièxie ānpái.","Được, cảm ơn đã sắp xếp."]],
+  [["请进，请坐！","Qǐng jìn, qǐng zuò!","Mời vào, mời ngồi!"],["谢谢，你们的办公室很漂亮。","Xièxie, nǐmen de bàngōngshì hěn piàoliang.","Cảm ơn, văn phòng các bạn đẹp quá."]],
+  [["请喝茶。会议室在这边。","Qǐng hē chá. Huìyìshì zài zhèbiān.","Mời trà. Phòng họp ở bên này."],["好，我们开始吧。","Hǎo, wǒmen kāishǐ ba.","Được, chúng ta bắt đầu nhé."]] ],
+[ [["请介绍一下贵公司。","Qǐng jièshào yíxià guì gōngsī.","Xin giới thiệu về quý công ty."],["我们是一家机电公司。","Wǒmen shì yì jiā jīdiàn gōngsī.","Chúng tôi là công ty cơ điện."]],
+  [["你们主要生产什么？","Nǐmen zhǔyào shēngchǎn shénme?","Các bạn chủ yếu sản xuất gì?"],["主要生产机械设备。","Zhǔyào shēngchǎn jīxiè shèbèi.","Chủ yếu sản xuất thiết bị cơ khí."]],
+  [["公司有多少员工？","Gōngsī yǒu duōshao yuángōng?","Công ty có bao nhiêu nhân viên?"],["有三百多个。","Yǒu sānbǎi duō ge.","Hơn 300 người."]],
+  [["你们有多少年经验？","Nǐmen yǒu duōshao nián jīngyàn?","Các bạn có bao nhiêu năm kinh nghiệm?"],["二十年了。","Èrshí nián le.","20 năm rồi."]],
+  [["工厂在哪儿？","Gōngchǎng zài nǎr?","Nhà máy ở đâu?"],["在胡志明市。","Zài Húzhìmíng shì.","Ở TP. Hồ Chí Minh."]],
+  [["你们的客户在哪些国家？","Nǐmen de kèhù zài nǎxiē guójiā?","Khách hàng các bạn ở những nước nào?"],["日本、韩国和中国。","Rìběn, Hánguó hé Zhōngguó.","Nhật, Hàn và Trung Quốc."]],
+  [["希望有机会合作。","Xīwàng yǒu jīhuì hézuò.","Mong có cơ hội hợp tác."],["我们也是！","Wǒmen yě shì!","Chúng tôi cũng vậy!"]] ],
+[ [["请发给我报价单。","Qǐng fā gěi wǒ bàojiàdān.","Gửi tôi bảng báo giá."],["好的，今天发。","Hǎo de, jīntiān fā.","Được, hôm nay gửi."]],
+  [["有产品目录吗？","Yǒu chǎnpǐn mùlù ma?","Có catalog không?"],["有，这是我们的目录。","Yǒu, zhè shì wǒmen de mùlù.","Có, đây là catalog."]],
+  [["您需要多少数量？","Nín xūyào duōshao shùliàng?","Ngài cần số lượng bao nhiêu?"],["先要五百个。","Xiān yào wǔbǎi ge.","Trước mắt cần 500 cái."]],
+  [["价格是FOB还是CIF？","Jiàgé shì FOB háishi CIF?","Giá FOB hay CIF?"],["是FOB价格。","Shì FOB jiàgé.","Là giá FOB."]],
+  [["价格可以便宜一点吗？","Jiàgé kěyǐ piányi yìdiǎn ma?","Giá rẻ hơn được không?"],["数量多可以优惠。","Shùliàng duō kěyǐ yōuhuì.","Số lượng nhiều thì có ưu đãi."]],
+  [["怎么付款？","Zěnme fùkuǎn?","Thanh toán thế nào?"],["先付百分之三十。","Xiān fù bǎi fēn zhī sānshí.","Trả trước 30%."]],
+  [["可以先寄样品吗？","Kěyǐ xiān jì yàngpǐn ma?","Gửi mẫu trước được không?"],["可以，样品免费。","Kěyǐ, yàngpǐn miǎnfèi.","Được, mẫu miễn phí."]] ],
+[ [["欢迎来我们展位！","Huānyíng lái wǒmen zhǎnwèi!","Mời ghé gian hàng chúng tôi!"],["谢谢，我看看。","Xièxie, wǒ kànkan.","Cảm ơn, tôi xem chút."]],
+  [["您是做哪个行业的？","Nín shì zuò nǎge hángyè de?","Ngài làm ngành nào?"],["我们做电气设备。","Wǒmen zuò diànqì shèbèi.","Chúng tôi làm thiết bị điện."]],
+  [["您对哪款产品感兴趣？","Nín duì nǎ kuǎn chǎnpǐn gǎn xìngqù?","Ngài quan tâm mẫu nào?"],["这款新产品。","Zhè kuǎn xīn chǎnpǐn.","Mẫu mới này."]],
+  [["我给您介绍一下。","Wǒ gěi nín jièshào yíxià.","Để tôi giới thiệu."],["好，请说。","Hǎo, qǐng shuō.","Vâng, mời nói."]],
+  [["这款有什么特点？","Zhè kuǎn yǒu shénme tèdiǎn?","Mẫu này có đặc điểm gì?"],["省电，质量很好。","Shěng diàn, zhìliàng hěn hǎo.","Tiết kiệm điện, chất lượng tốt."]],
+  [["能给我一张名片吗？","Néng gěi wǒ yì zhāng míngpiàn ma?","Cho tôi xin danh thiếp được không?"],["当然，这是我的名片。","Dāngrán, zhè shì wǒ de míngpiàn.","Tất nhiên, đây là danh thiếp."]],
+  [["我们加个微信，以后联系。","Wǒmen jiā gè Wēixìn, yǐhòu liánxì.","Kết bạn WeChat, sau này liên lạc."],["好的，保持联系！","Hǎo de, bǎochí liánxì!","Được, giữ liên lạc nhé!"]] ],
+[ [["最低起订量是多少？","Zuìdī qǐdìngliàng shì duōshao?","MOQ bao nhiêu?"],["一千个。","Yìqiān ge.","1000 cái."]],
+  [["交货期多长时间？","Jiāohuòqī duō cháng shíjiān?","Giao hàng mất bao lâu?"],["大概三十天。","Dàgài sānshí tiān.","Khoảng 30 ngày."]],
+  [["运费谁付？","Yùnfèi shéi fù?","Ai trả phí vận chuyển?"],["我们付到港口。","Wǒmen fù dào gǎngkǒu.","Chúng tôi trả đến cảng."]],
+  [["保修多长时间？","Bǎoxiū duō cháng shíjiān?","Bảo hành bao lâu?"],["保修一年。","Bǎoxiū yì nián.","Bảo hành một năm."]],
+  [["售后服务怎么样？","Shòuhòu fúwù zěnmeyàng?","Dịch vụ hậu mãi thế nào?"],["我们在越南有工程师。","Wǒmen zài Yuènán yǒu gōngchéngshī.","Chúng tôi có kỹ sư ở Việt Nam."]],
+  [["我们想做你们的代理。","Wǒmen xiǎng zuò nǐmen de dàilǐ.","Chúng tôi muốn làm đại lý."],["欢迎！我们详细谈谈。","Huānyíng! Wǒmen xiángxì tántan.","Hoan nghênh! Ta bàn chi tiết."]],
+  [["今天可以下订单吗？","Jīntiān kěyǐ xià dìngdān ma?","Hôm nay đặt hàng được không?"],["可以，我们签合同吧。","Kěyǐ, wǒmen qiān hétong ba.","Được, chúng ta ký hợp đồng."]] ],
+[ [["欢迎参观我们工厂！","Huānyíng cānguān wǒmen gōngchǎng!","Chào mừng tham quan nhà máy!"],["谢谢，很期待。","Xièxie, hěn qīdài.","Cảm ơn, rất mong chờ."]],
+  [["请戴好安全帽。","Qǐng dài hǎo ānquánmào.","Xin đội mũ bảo hộ."],["好的。","Hǎo de.","Vâng."]],
+  [["这是我们的生产车间。","Zhè shì wǒmen de shēngchǎn chējiān.","Đây là phân xưởng sản xuất."],["车间很干净。","Chējiān hěn gānjìng.","Xưởng sạch quá."]],
+  [["这条生产线是自动化的吗？","Zhè tiáo shēngchǎnxiàn shì zìdònghuà de ma?","Dây chuyền này tự động hóa không?"],["是，全自动。","Shì, quán zìdòng.","Vâng, hoàn toàn tự động."]],
+  [["这些设备是哪里的？","Zhèxiē shèbèi shì nǎlǐ de?","Thiết bị này của nước nào?"],["是从德国进口的。","Shì cóng Déguó jìnkǒu de.","Nhập khẩu từ Đức."]],
+  [["可以根据图纸定制吗？","Kěyǐ gēnjù túzhǐ dìngzhì ma?","Gia công theo bản vẽ được không?"],["可以，零部件和模具都可以。","Kěyǐ, língbùjiàn hé mújù dōu kěyǐ.","Được, linh kiện và khuôn đều được."]],
+  [["这是质检中心。","Zhè shì zhìjiǎn zhōngxīn.","Đây là trung tâm QC."],["每个产品都检查吗？","Měi ge chǎnpǐn dōu jiǎnchá ma?","Sản phẩm nào cũng kiểm tra à?"]] ],
+[ [["不好意思，会议要推迟一下。","Bù hǎoyìsi, huìyì yào tuīchí yíxià.","Ngại quá, cuộc họp phải hoãn chút."],["没关系，推迟到几点？","Méi guānxi, tuīchí dào jǐ diǎn?","Không sao, hoãn đến mấy giờ?"]],
+  [["货物晚到了，真抱歉。","Huòwù wǎn dào le, zhēn bàoqiàn.","Hàng đến trễ, thật xin lỗi."],["请尽快解决。","Qǐng jǐnkuài jiějué.","Xin giải quyết sớm."]],
+  [["有问题请随时联系我。","Yǒu wèntí qǐng suíshí liánxì wǒ.","Có vấn đề cứ liên hệ tôi."],["好的，谢谢。","Hǎo de, xièxie.","Vâng, cảm ơn."]],
+  [["这个价格我们考虑一下。","Zhège jiàgé wǒmen kǎolǜ yíxià.","Giá này chúng tôi cân nhắc."],["好，等您回复。","Hǎo, děng nín huífù.","Được, chờ ngài trả lời."]],
+  [["这次恐怕不行，下次吧。","Zhè cì kǒngpà bù xíng, xià cì ba.","Lần này e là không được, lần sau nhé."],["理解，下次合作。","Lǐjiě, xià cì hézuò.","Hiểu rồi, lần sau hợp tác."]],
+  [["感谢您这次来访。","Gǎnxiè nín zhè cì láifǎng.","Cảm ơn chuyến thăm lần này."],["谢谢你们的热情招待。","Xièxie nǐmen de rèqíng zhāodài.","Cảm ơn sự tiếp đón nhiệt tình."]],
+  [["希望我们长期合作！","Xīwàng wǒmen chángqī hézuò!","Mong hợp tác lâu dài!"],["一定！一路平安！","Yídìng! Yílù píng'ān!","Nhất định! Thượng lộ bình an!"]] ]
+];
+function p90Dlg(i){return i<84?P90_DLG[Math.floor(i/7)][i%7]:P90_DLG[(i-84)*2][6-((i-84)%7)];}
 /* ===== BÀI HÁT LUYỆN NGHE (1 bài/tuần, dễ → khó) ===== */
 const P90_SONGS=[
 ["两只老虎","Liǎng zhī lǎohǔ – Hai con hổ","Đồng dao",'Giai điệu "Kìa con bướm vàng" — sếp đã thuộc nhạc, chỉ cần nghe lời. Rất chậm, lặp nhiều.',[["两","liǎng","hai"],["老虎","lǎohǔ","con hổ"],["跑","pǎo","chạy"]],1],
@@ -1786,7 +1877,7 @@ function p90Tick(idx,ex){
 }
 function p90Shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function p90Pool(D){
-  const all=P90_WEEKS.flatMap(w=>w.w), week=D.final?all:D.W.w, today=D.final?p90Shuffle(all).slice(0,5):D.words;
+  const all=P90_WEEKS.slice(0,D.wk+1).flatMap(w=>w.w), week=D.final?all:D.W.w, today=D.final?p90Shuffle(all).slice(0,5):D.words;
   const qs=p90Shuffle([...today,...today,...p90Shuffle(week)]).filter((w,i,a)=>i===0||a[i-1][0]!==w[0]).slice(0,5);
   return {all,qs};
 }
@@ -1828,7 +1919,7 @@ function p90Write(D,idx){
 }
 function p90Speak(D,idx){
   const box=document.getElementById("p90ExBox"), SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  const items=[...D.sent.map(s=>s),...D.words.slice(0,2)].slice(0,3); let i=0,pass=0;
+  const items=[...p90Dlg(idx),...D.sent].slice(0,4); let i=0,pass=0;
   const clean=t=>t.replace(/[^一-鿿]/g,"");
   const sim=(a,b)=>{a=clean(a);b=clean(b);if(!a.length)return 0;let hit=0;const bb=[...b];for(const c of a){const j=bb.indexOf(c);if(j>-1){hit++;bb.splice(j,1);}}return hit/Math.max(a.length,b.length);};
   const step=()=>{

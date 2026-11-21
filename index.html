@@ -262,6 +262,10 @@
   .p90-ph b{color:#2b7bd1;font-size:16px}.p90-ph small{font-size:10px;color:var(--muted);text-align:center}
   .p90-syl{font-size:13px}.sy{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:0 4px;margin:2px 3px 0 0;background:#fff}
   .sy-i{color:#2b7bd1;font-weight:700}.sy-f{color:var(--green);font-weight:700}.sy-t{font-size:10px;background:var(--gold);color:#fff;border-radius:4px;padding:0 3px;margin-left:2px;vertical-align:super}
+  .p90-ct{display:block;margin:0 auto 4px}
+  .p90-tip{background:#fffaf0;border-radius:10px;padding:10px;font-size:14px;line-height:1.55;margin:6px 0}
+  .p90-tc{margin-top:10px}.p90-tcr{display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:6px 10px;margin-bottom:6px;text-align:left}
+  .p90-tcr .p90-ct{margin:0}
   .p90-exnav{border-top:1px dashed var(--line);padding-top:10px;margin-top:14px}.p90-exnav .p90-btn{flex:1;padding:12px}
   .p90-guide{background:#f3f8ff;border-left:4px solid #2b7bd1;border-radius:8px;padding:10px;margin-bottom:12px;font-size:14px;line-height:1.5}
   .p90-month{margin:14px 0 6px;font-weight:700;color:var(--red);font-size:14px}
@@ -1764,11 +1768,11 @@ function renderPlan90(){
     <button id="p90Next" ${idx>=89?"disabled":""}>▶</button></div>
   <div class="p90-jump"><button class="p90-btn main" onclick="document.getElementById('p90ExCard').scrollIntoView({behavior:'smooth'})">🏋️ Làm bài tập ngay ↓</button><button class="p90-btn" onclick="document.querySelector('.p90-song').scrollIntoView({behavior:'smooth'})">🎵 Bài hát</button><button class="p90-btn" onclick="document.querySelector('.p90-film').scrollIntoView({behavior:'smooth'})">🎬 Phim</button></div>
   ${idx<7?(()=>{const P=P90_PHON[idx];return `<div class="p90-card p90-phon"><h4>🔤 Bước 1 · Âm tiết hôm nay: ${P.t}</h4>
-    <p class="p90-guide" style="border-color:#c9a24a;background:#fffaf0">${P.tip}</p>
+    <p class="p90-tip">${P.tip}</p>
     <div class="p90-phgrid">${P.it.map(x=>`<button class="p90-ph" data-say="${x[1]}"><b>${x[0]}</b><span class="p90-hz2">${x[1]}</span><small>${x[2]}${x[3]?" · "+x[3]:""}</small></button>`).join("")}</div>
-    <p><small>👉 Bấm từng ô nghe 3 lần, đọc to theo. Sau đó làm bài <b>Nghe</b> & <b>Đọc</b> bên dưới (toàn bộ là bài tập âm tiết).</small></p></div>`;})():""}
+    ${idx===0?p90ToneChart():""}</div>`;})():""}
   <div class="p90-card"><h4>📚 ${idx<7?"Bước 2 · ":""}Từ hôm nay</h4>
-    <p><small>Mỗi từ được tách âm tiết: <span class="sy-i">âm đầu</span> + <span class="sy-f">vần</span> + <span class="sy-t">thanh</span></small></p>
+    <p><small><span class="sy-i">âm đầu</span> + <span class="sy-f">vần</span> + <span class="sy-t">thanh</span></small></p>
     ${D.words.map(w=>`<div class="p90-w"><span class="p90-hz">${w[0]}</span><span>${w[1]}<br><span class="p90-syl">${p90SylHtml(w[1])}</span><br><small>${w[2]}</small></span><button class="speak-btn" data-say="${w[0]}">🔊</button></div>`).join("")}
     ${D.sent.map(s=>`<div class="p90-s"><div><b>${s[0]}</b><br>${s[1]}<br><small>${s[2]}</small></div><button class="speak-btn" data-say="${s[0]}">🔊</button><button class="speak-btn slow" data-say="${s[0]}" data-slow="1">🐢</button></div>`).join("")}
     ${(!D.final&&D.dt===0)?`<p><small>📐 Ngữ pháp tuần: ${D.W.f}</small></p>`:""}
@@ -1781,7 +1785,6 @@ function renderPlan90(){
   </div>
   <div class="p90-card" id="p90ExCard"><h4>🏋️ Bài tập hôm nay</h4>
     <div class="p90-extabs">${[["nghe","🎧 Nghe"],["doc","📖 Đọc"],["viet","✍️ Viết"],["noi","🎤 Nói"]].map(([k,l])=>`<button data-ex="${k}" class="${k===p90Ex?"on":""}">${l}${p90ExDone(idx,k)?" ✓":""}</button>`).join("")}</div>
-    <div id="p90ExGuide" class="p90-guide"></div>
     <div id="p90ExBox"></div>
     <div class="p90-row p90-exnav"><button class="p90-btn" id="p90ExPrev">◀ Phần trước</button><button class="p90-btn main" id="p90ExNext">Phần tiếp ▶</button></div>
     ${dl.length>=4?'<div class="p90-ok">🎉 Đạt ngày '+(idx+1)+'! Sếp giỏi quá.</div>':'<p><small>Xong '+dl.length+'/4 phần · làm đạt cả 4 phần là hoàn thành ngày.</small></p>'}
@@ -2143,6 +2146,13 @@ function p90ToneVar(raw,t){const s=[...raw];let k=s.findIndex(c=>P90_TM[c]);let 
   if(k<0){const order=["a","o","e","iu","ui","i","u","ü"];const pl=raw;for(const v of ["a","o","e"]){const j=pl.indexOf(v);if(j>-1){k=j;break;}}if(k<0){k=Math.max(pl.lastIndexOf("i"),pl.lastIndexOf("u"),pl.lastIndexOf("ü"));}if(k<0)return raw;base=s[k];}
   else base=P90_TM[s[k]][0];
   s[k]=t===0?base:P90_MK[base][t-1];return s.join("");}
+function p90Contour(t,w=44,hh=30){const y=v=>hh-2-(v-1)*(hh-4)/4;const P={1:[[2,5],[w-2,5]],2:[[2,3],[w-2,5]],3:[[2,2],[w*0.45,1],[w-2,4]],4:[[2,5],[w-2,1]]}[t];
+  const pts=P?P.map(([x,v])=>x+","+y(v)).join(" "):"";
+  return `<svg class="p90-ct" width="${w}" height="${hh}" viewBox="0 0 ${w} ${hh}">${[1,2,3,4,5].map(v=>`<line x1="0" x2="${w}" y1="${y(v)}" y2="${y(v)}" stroke="#eadfcd" stroke-width="1"/>`).join("")}${P?`<polyline points="${pts}" fill="none" stroke="#d1373f" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`:`<circle cx="${w/2}" cy="${y(2.5)}" r="4" fill="#d1373f"/>`}</svg>`;}
+function p90ToneChart(){
+  const T=[[1,"mā","妈","Cao và giữ ngang","5→5"],[2,"má","麻","Từ giữa đi lên cao","3→5"],[3,"mǎ","马","Xuống thấp rồi lên","2→1→4"],[4,"mà","骂","Từ cao rơi xuống","5→1"],[0,"ma","吗","Ngắn, nhẹ","—"]];
+  return `<div class="p90-tc"><p><b>Hình dạng 4 thanh</b> <small>(độ cao giọng 1 thấp → 5 cao)</small></p>
+  ${T.map(t=>`<button class="p90-tcr" data-say="${t[2]}">${p90Contour(t[0],70,44)}<span class="p90-hz2">${t[1]}</span><span><b>${t[0]?"Thanh "+t[0]:"Thanh nhẹ"}</b><br><small>${t[3]} · ${t[4]}</small></span></button>`).join("")}</div>`;}
 const P90_TONELAB=["nhẹ","1 ngang","2 lên","3 xuống-lên","4 rơi"];
 function p90PhonQs(idx,ex){
   const items=[];for(let j=0;j<=Math.min(idx,6);j++)P90_PHON[j].it.forEach(x=>items.push({...{lab:x[0],c:x[1],info:x[2]},day:j}));
@@ -2154,14 +2164,14 @@ function p90PhonQs(idx,ex){
     const py=x.day===0?x.lab:pyOf(x), syl=p90Syls(py)[0]||{raw:py,tone:0};
     const ans=[x.c,py,x.info];
     if(ex==="nghe"&&k%2===0){ // nghe chọn thanh
-      const opts=[1,2,3,4,0].map(t=>[x.c+t,"",P90_TONELAB[t]]);const a=opts[[0,1,2,3,4].indexOf(syl.tone===0?4:syl.tone-1)];
-      return {t:"Nghe và chọn THANH ĐIỆU",say:x.c,ans:a,opts:p90Shuffle(opts).slice(0,5),lab:o=>o[2],fb:`${x.c} · ${py}`};}
+      const opts=[1,2,3,4,0].map(t=>[x.c+t,p90ToneVar(syl.raw,t),P90_TONELAB[t],t]);const a=opts[syl.tone===0?4:syl.tone-1];
+      return {t:"Nghe — thanh nào?",say:x.c,ans:a,opts:opts,lab:o=>`${p90Contour(o[3])}<b class="p90-hz2">${o[1]}</b>`,fb:`${x.c} · ${py}`};}
     // chọn pinyin đúng (biến thể thanh)
     const vars=[...new Set([1,2,3,4].map(t=>p90ToneVar(syl.raw,t)).concat(syl.raw))].filter(v=>v!==syl.raw).slice(0,3).map(v=>[x.c+v,v,""]);
     const me=[x.c,syl.raw,""];
     if(ex==="nghe")return {t:"Nghe và chọn PINYIN đúng",say:x.c,ans:me,opts:p90Shuffle([me,...vars]),lab:o=>`<span class="p90-hz2">${o[1]}</span>`,fb:`${x.c} · ${py}`};
-    if(k%2===0){const opts=[1,2,3,4,0].map(t=>[t,"",P90_TONELAB[t]]);const a=opts[syl.tone===0?4:syl.tone-1];
-      return {t:"Pinyin này thanh mấy?",big:syl.raw,ans:a,opts:p90Shuffle(opts),lab:o=>o[2],fb:`${x.c} · ${py} — ${x.info}`};}
+    if(k%2===0){const opts=[1,2,3,4,0].map(t=>[t,"",P90_TONELAB[t],t]);const a=opts[syl.tone===0?4:syl.tone-1];
+      return {t:"Đọc lên giọng thế nào?",big:syl.raw,ans:a,opts:opts,lab:o=>`${p90Contour(o[3])}<span>${o[3]?"Thanh "+o[3]:"Thanh nhẹ"}</span>`,fb:`${x.c} · ${py} — ${x.info}`};}
     const inis=["b","p","m","f","d","t","n","l","g","k","h","j","q","x","zh","ch","sh","r","z","c","s"];
     if(syl.ini){const opts=[syl.ini,...p90Shuffle(inis.filter(i=>i!==syl.ini)).slice(0,3)].map(i=>[i,"",i]);
       return {t:`Âm đầu của "${syl.raw}" là?`,say:x.c,big:syl.raw,ans:opts[0],opts:p90Shuffle(opts),lab:o=>`<span class="p90-hz2">${o[2]}</span>`,fb:`${x.c} · ${py}`};}

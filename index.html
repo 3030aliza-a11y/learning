@@ -225,6 +225,24 @@
   .lesson-fail-note{text-align:center;color:var(--red-dark);font-weight:700;margin-top:10px;}
 
   footer{text-align:center;color:var(--muted);font-size:12px;padding:20px;}
+
+  .p90-head,.p90-card,.p90-nav{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .p90-head{background:linear-gradient(135deg,#fff,#fdf1e2)}
+  .p90-stats{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0;font-size:14px}
+  .p90-bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:6px}.p90-bar i{display:block;height:100%;background:var(--green)}
+  .p90-nav{display:flex;align-items:center;justify-content:space-between;text-align:center;gap:8px}
+  .p90-nav button{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:8px 14px;font-size:16px}
+  .p90-card h4{margin:0 0 10px}
+  .p90-w,.p90-s{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .p90-w>span:nth-child(2),.p90-s>div{flex:1}.p90-hz{font-size:26px;min-width:70px;color:var(--red)}
+  .p90-t{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer}
+  .p90-t.ok{background:#eef7ee}.p90-t input{width:20px;height:20px;margin-top:2px;flex:none}
+  .p90-tag{color:#fff;font-size:11px;font-weight:700;padding:3px 6px;border-radius:6px;white-space:nowrap}
+  .p90-t a{color:var(--red)}.p90-ok{text-align:center;font-weight:700;color:var(--green);margin:6px 0}
+  #p90Note{width:100%;box-sizing:border-box;min-height:60px;border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit}
+  .p90-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:8px}
+  .p90-grid button{border:1px solid var(--line);background:var(--paper);border-radius:6px;font-size:11px;padding:5px 0}
+  .p90-grid .full{background:var(--green);color:#fff}.p90-grid .half{background:#f6e3b4}.p90-grid .cur{outline:2px solid var(--red)}
 </style>
 </head>
 <body>
@@ -236,7 +254,8 @@
 </header>
 
 <nav>
-  <button data-tab="path" class="active">🗺️ Lộ trình</button>
+  <button data-tab="plan90" class="active">📅 Plan 90 ngày</button>
+  <button data-tab="path">🗺️ Lộ trình</button>
   <button data-tab="vocab">📖 Từ vựng</button>
   <button data-tab="flash">🃏 Thẻ ghi nhớ</button>
   <button data-tab="quiz">📝 Trắc nghiệm</button>
@@ -248,7 +267,9 @@
 <main>
 
   <!-- COURSE PATH -->
-  <section id="path" class="panel active">
+  <section id="plan90" class="panel active"><div id="plan90View"></div></section>
+
+  <section id="path" class="panel">
     <div id="pathView"></div>
   </section>
 
@@ -1619,5 +1640,97 @@ function renderWriteStep(container, words){
 
 renderPathMap();
 </script>
+<script>
+/* ===== PLAN 90 NGÀY — 4 KỸ NĂNG NGHE·NÓI·ĐỌC·VIẾT ===== */
+const P90_WEEKS=[
+{t:"Ngữ âm chuẩn & Chào hỏi",w:[["你好","nǐ hǎo","xin chào"],["您好","nín hǎo","chào ngài"],["早上好","zǎoshang hǎo","chào buổi sáng"],["谢谢","xièxie","cảm ơn"],["不客气","bú kèqi","không có gì"],["再见","zàijiàn","tạm biệt"],["对不起","duìbuqǐ","xin lỗi"],["没关系","méi guānxi","không sao"]],s:[["您好！很高兴认识您。","Nín hǎo! Hěn gāoxìng rènshi nín.","Chào ngài! Rất vui được quen ngài."],["谢谢！——不客气。","Xièxie! — Bú kèqi.","Cảm ơn! — Không có gì."],["明天见！","Míngtiān jiàn!","Mai gặp nhé!"]],h:"一二三人口大中你好",f:"21 thanh mẫu, 36 vận mẫu, 4 thanh điệu + thanh nhẹ (học ở tab Pinyin)"},
+{t:"Giới thiệu bản thân & Chức vụ",w:[["我","wǒ","tôi"],["姓","xìng","họ"],["叫","jiào","tên là"],["公司","gōngsī","công ty"],["总经理","zǒngjīnglǐ","tổng giám đốc"],["负责人","fùzérén","người phụ trách"],["协会","xiéhuì","hiệp hội"],["名片","míngpiàn","danh thiếp"],["越南人","Yuènánrén","người Việt"]],s:[["我姓阮，叫Aliza。","Wǒ xìng Ruǎn, jiào Aliza.","Tôi họ Nguyễn, tên Aliza."],["我是公司的负责人。","Wǒ shì gōngsī de fùzérén.","Tôi là người phụ trách công ty."],["这是我的名片，请多关照。","Zhè shì wǒ de míngpiàn, qǐng duō guānzhào.","Đây là danh thiếp của tôi, mong được giúp đỡ."]],h:"我是人女口工司名",f:"Câu 是 (shì), hỏi 吗 (ma), 的 (de) sở hữu"},
+{t:"Số đếm, Tiền tệ & Thời gian",w:[["多少钱","duōshao qián","bao nhiêu tiền"],["块","kuài","đồng (tệ)"],["人民币","rénmínbì","nhân dân tệ"],["美元","měiyuán","đô la Mỹ"],["今天","jīntiān","hôm nay"],["明天","míngtiān","ngày mai"],["点","diǎn","giờ"],["星期","xīngqī","tuần/thứ"],["号","hào","ngày"]],s:[["这个多少钱？","Zhège duōshao qián?","Cái này bao nhiêu tiền?"],["今天几月几号？","Jīntiān jǐ yuè jǐ hào?","Hôm nay ngày mấy tháng mấy?"],["下午三点见。","Xiàwǔ sān diǎn jiàn.","Ba giờ chiều gặp nhé."]],h:"日月年金明元钱点",f:"Số 1–10.000, 几/多少, giờ–ngày–tháng"},
+{t:"Tiếp khách Bàn tiệc & Ẩm thực",w:[["吃饭","chīfàn","ăn cơm"],["菜","cài","món ăn"],["茶","chá","trà"],["酒","jiǔ","rượu"],["干杯","gānbēi","cạn ly"],["好吃","hǎochī","ngon"],["买单","mǎidān","thanh toán"],["辣","là","cay"]],s:[["请慢用！","Qǐng màn yòng!","Mời dùng thong thả!"],["我们敬您一杯！","Wǒmen jìng nín yì bēi!","Chúng tôi kính ngài một ly!"],["祝我们合作愉快，干杯！","Zhù wǒmen hézuò yúkuài, gānbēi!","Chúc hợp tác vui vẻ, cạn ly!"]],h:"吃饭水米茶酒菜好",f:"Mời 请, muốn 想/要, khen 很+tính từ"},
+{t:"Đặt lịch hẹn & WeChat",w:[["微信","Wēixìn","WeChat"],["有空","yǒu kòng","rảnh"],["约","yuē","hẹn"],["时间","shíjiān","thời gian"],["安排","ānpái","sắp xếp"],["改天","gǎitiān","hôm khác"],["地址","dìzhǐ","địa chỉ"],["确认","quèrèn","xác nhận"]],s:[["您这周什么时候有空？","Nín zhè zhōu shénme shíhou yǒu kòng?","Tuần này khi nào ngài rảnh?"],["我们约在星期三上午十点。","Wǒmen yuē zài xīngqīsān shàngwǔ shí diǎn.","Hẹn 10h sáng thứ Tư."],["我们加个微信吧，方便联系。","Wǒmen jiā gè Wēixìn ba, fāngbiàn liánxì.","Kết bạn WeChat cho tiện liên lạc."]],h:"时间约会见周空",f:"Trạng ngữ thời gian đứng trước động từ; 吧 đề nghị"},
+{t:"Đón tiếp đối tác Sân bay & Văn phòng",w:[["欢迎","huānyíng","hoan nghênh"],["机场","jīchǎng","sân bay"],["酒店","jiǔdiàn","khách sạn"],["司机","sījī","tài xế"],["会议室","huìyìshì","phòng họp"],["辛苦","xīnkǔ","vất vả"],["请坐","qǐng zuò","mời ngồi"],["行李","xíngli","hành lý"]],s:[["欢迎来到越南！","Huānyíng láidào Yuènán!","Chào mừng đến Việt Nam!"],["路上辛苦了！","Lùshang xīnkǔ le!","Đi đường vất vả rồi!"],["请进，请坐，喝茶。","Qǐng jìn, qǐng zuò, hē chá.","Mời vào, mời ngồi, mời trà."]],h:"迎接客坐进机场",f:"了 hoàn thành, 在 + nơi chốn"},
+{t:"Giới thiệu Doanh nghiệp & Năng lực",w:[["生产","shēngchǎn","sản xuất"],["主要","zhǔyào","chủ yếu"],["经验","jīngyàn","kinh nghiệm"],["工厂","gōngchǎng","nhà máy"],["员工","yuángōng","nhân viên"],["机电","jīdiàn","cơ khí–điện"],["客户","kèhù","khách hàng"],["合作","hézuò","hợp tác"]],s:[["我们公司主要生产机械设备。","Wǒmen gōngsī zhǔyào shēngchǎn jīxiè shèbèi.","Công ty chúng tôi chủ yếu sản xuất thiết bị cơ khí."],["我们有二十年经验。","Wǒmen yǒu èrshí nián jīngyàn.","Chúng tôi có 20 năm kinh nghiệm."],["工厂有三百个员工。","Gōngchǎng yǒu sānbǎi ge yuángōng.","Nhà máy có 300 nhân viên."]],h:"生产工厂电机业",f:"有 (có), lượng từ 个, 主要 + động từ"},
+{t:"Nhu cầu & Báo giá sơ bộ",w:[["价格","jiàgé","giá cả"],["报价单","bàojiàdān","bảng báo giá"],["数量","shùliàng","số lượng"],["产品目录","chǎnpǐn mùlù","catalog"],["付款","fùkuǎn","thanh toán"],["便宜","piányi","rẻ"],["样品","yàngpǐn","hàng mẫu"],["要求","yāoqiú","yêu cầu"]],s:[["请发给我报价单和产品目录。","Qǐng fā gěi wǒ bàojiàdān hé chǎnpǐn mùlù.","Gửi tôi báo giá và catalog."],["价格可以便宜一点吗？","Jiàgé kěyǐ piányi yìdiǎn ma?","Giá rẻ hơn chút được không?"],["可以先寄样品吗？","Kěyǐ xiān jì yàngpǐn ma?","Gửi mẫu trước được không?"]],h:"价格数量交货单",f:"可以 (có thể), 一点 (một chút), 给 (cho)"},
+{t:"Hội chợ & Triển lãm (1)",w:[["展会","zhǎnhuì","hội chợ"],["展位","zhǎnwèi","gian hàng"],["感兴趣","gǎn xìngqù","quan tâm"],["款","kuǎn","mẫu/kiểu"],["新产品","xīn chǎnpǐn","sản phẩm mới"],["介绍","jièshào","giới thiệu"],["行业","hángyè","ngành nghề"],["联系方式","liánxì fāngshì","cách liên hệ"]],s:[["您对哪款产品感兴趣？","Nín duì nǎ kuǎn chǎnpǐn gǎn xìngqù?","Ngài quan tâm mẫu nào?"],["我给您介绍一下。","Wǒ gěi nín jièshào yíxià.","Để tôi giới thiệu một chút."],["您是做哪个行业的？","Nín shì zuò nǎge hángyè de?","Ngài làm ngành nào?"]],h:"展会新品介绍趣",f:"对…感兴趣, động từ + 一下"},
+{t:"Hội chợ & Triển lãm (2)",w:[["最低起订量","zuìdī qǐdìngliàng","MOQ"],["交货期","jiāohuòqī","thời gian giao"],["代理","dàilǐ","đại lý"],["售后","shòuhòu","hậu mãi"],["保修","bǎoxiū","bảo hành"],["订单","dìngdān","đơn hàng"],["运费","yùnfèi","phí vận chuyển"],["质量","zhìliàng","chất lượng"]],s:[["最低起订量是多少？","Zuìdī qǐdìngliàng shì duōshao?","MOQ là bao nhiêu?"],["交货期要多长时间？","Jiāohuòqī yào duō cháng shíjiān?","Giao hàng mất bao lâu?"],["保修一年吗？","Bǎoxiū yì nián ma?","Bảo hành một năm phải không?"]],h:"订单质量代理保",f:"多 + tính từ (bao lâu/bao xa), so sánh 比"},
+{t:"Tham quan Nhà xưởng & Chuyên ngành",w:[["车间","chējiān","phân xưởng"],["设备","shèbèi","thiết bị"],["零部件","língbùjiàn","linh kiện"],["模具","mújù","khuôn mẫu"],["自动化","zìdònghuà","tự động hóa"],["生产线","shēngchǎnxiàn","dây chuyền"],["质检","zhìjiǎn","kiểm tra chất lượng"],["安全","ānquán","an toàn"],["图纸","túzhǐ","bản vẽ"]],s:[["这是我们的生产车间。","Zhè shì wǒmen de shēngchǎn chējiān.","Đây là phân xưởng sản xuất."],["我们可以根据图纸定制零部件。","Wǒmen kěyǐ gēnjù túzhǐ dìngzhì língbùjiàn.","Có thể gia công linh kiện theo bản vẽ."],["请注意安全。","Qǐng zhùyì ānquán.","Xin chú ý an toàn."]],h:"车间设备安全线",f:"根据…, 正在 (đang)"},
+{t:"Xử lý phát sinh & Giữ quan hệ",w:[["推迟","tuīchí","hoãn"],["不好意思","bù hǎoyìsi","ngại quá"],["问题","wèntí","vấn đề"],["解决","jiějué","giải quyết"],["考虑","kǎolǜ","cân nhắc"],["长期","chángqī","lâu dài"],["关系","guānxi","quan hệ"],["希望","xīwàng","hy vọng"]],s:[["不好意思，会议要推迟一下。","Bù hǎoyìsi, huìyì yào tuīchí yíxià.","Xin lỗi, cuộc họp phải hoãn chút."],["我们考虑一下再回复您。","Wǒmen kǎolǜ yíxià zài huífù nín.","Chúng tôi cân nhắc rồi trả lời ngài."],["希望我们能建立长期的合作关系！","Xīwàng wǒmen néng jiànlì chángqī de hézuò guānxi!","Mong xây dựng quan hệ hợp tác lâu dài!"]],h:"问题解决长期望",f:"再 (rồi mới), 能/会, từ chối khéo"}
+];
+const P90_DAYTYPE=["Học mới · phần 1","Học mới · phần 2","Học mới · phần 3","Hội thoại tổng hợp","Đọc & Viết đoạn","Ôn tập + Đóng vai","Kiểm tra tuần"];
+const P90_KEY="p90_v1";
+function p90Load(){try{return JSON.parse(localStorage.getItem(P90_KEY))||{};}catch(e){return {};}}
+function p90Save(d){try{localStorage.setItem(P90_KEY,JSON.stringify(d));}catch(e){}}
+function p90Iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function p90TodayIdx(st){const s=new Date(st+"T00:00:00"),n=new Date(p90Iso(new Date())+"T00:00:00");return Math.min(89,Math.max(0,Math.round((n-s)/864e5)));}
+function p90Day(i){
+  const final=i>=84, wk=final?11:Math.floor(i/7), dt=final?6:i%7, W=P90_WEEKS[wk];
+  const wn=W.w, part=(!final&&dt<3)?dt:null;
+  const words=part!==null?wn.slice(Math.floor(part*wn.length/3),Math.floor((part+1)*wn.length/3)):wn;
+  const sent=part!==null?[W.s[part]]:W.s;
+  const chars=[...W.h].slice(part!==null?part*3:0,part!==null?part*3+3:5);
+  let tasks;
+  if(final){const a=1+(i-84)*2;tasks=[
+    ["Sáng","NGHE",15,"Nghe lại mẫu câu tuần "+a+"–"+(a+1)+" (bấm 🔊 ở các ngày đó), nhại theo, chép chính tả Pinyin.",null],
+    ["Sáng","VIẾT",15,"Viết tay 10 chữ Hán khó nhất đã học + gõ 1 tin nhắn WeChat 5 câu gửi đối tác.","write"],
+    ["Trưa","ĐỌC",20,"Thẻ ghi nhớ toàn bộ từ (tắt Pinyin) + làm Trắc nghiệm.","quiz"],
+    ["Tối","NÓI",30,"Đóng vai 15 phút trọn kịch bản: đón khách → giới thiệu công ty → báo giá → hội chợ → tạm biệt. Ghi âm, nghe lại sửa thanh điệu.",null]];}
+  else tasks=[
+    ["Sáng","NGHE",10,dt===6?"Nghe lại 3 mẫu câu tuần, chép chính tả Pinyin không nhìn.":"Bấm 🔊 nghe từng từ/câu hôm nay 5 lần, shadowing (nhại theo) đúng thanh điệu.",(wk===0&&dt<3)?"pinyin":null],
+    ["Sáng","VIẾT",dt===4?15:10,dt===4?"Viết tay lại các chữ tuần này + gõ Pinyin 1 đoạn 4–6 câu về chủ đề tuần.":"Viết tay đúng bút thuận: "+chars.join(" ")+" (mỗi chữ 5 lần, tab Luyện viết).","write"],
+    ["Trưa","ĐỌC",20,dt>=5?"Thẻ ghi nhớ ôn hết từ của tuần (tắt Pinyin) + Trắc nghiệm.":"Che nghĩa, đọc to từ & câu hôm nay; ôn thẻ ghi nhớ từ hôm trước.",dt>=5?"quiz":"flash"],
+    ["Tối","NÓI",30,dt===6?"Tự kiểm tra: nói 1 phút về \""+W.t+"\" không nhìn bài, ghi âm. Đạt khi nói trôi 5 câu.":dt===5?"Đóng vai với AI (ChatGPT giọng nói) tình huống \""+W.t+"\" 10 phút + gõ 5 tin nhắn WeChat.":"Nói to mẫu câu 10 lần, tự đặt 3 câu mới thay bằng từ hôm nay; gõ Pinyin 5 câu trên điện thoại.",dt===3?"convo":null]];
+  return {wk,dt,W,final,words,sent,tasks,type:final?"Tổng ôn thực chiến":P90_DAYTYPE[dt]};
+}
+const P90_MILESTONE=[[30,"Hết tháng 1: ~120 từ, chào hỏi – giới thiệu – số – ăn uống, viết ~35 chữ."],[60,"Hết tháng 2: ~200 từ, hẹn lịch WeChat, đón khách, giới thiệu công ty, hỏi giá."],[90,"Hết tháng 3: ~300 từ ≈ HSK 2, tự tin giao tiếp hội chợ & nhà xưởng."]];
+let p90View=null;
+function renderPlan90(){
+  const box=document.getElementById("plan90View"), d=p90Load();
+  if(!d.start){d.start=p90Iso(new Date());p90Save(d);}
+  d.done=d.done||{}; d.notes=d.notes||{};
+  const today=p90TodayIdx(d.start), idx=p90View??today, D=p90Day(idx);
+  const full=k=>(d.done[k]||[]).length>=4;
+  const doneDays=Object.keys(d.done).filter(full).length;
+  let streak=0; for(let k=today;k>=0;k--){if(full(k))streak++;else if(k<today)break;}
+  const mins=Object.values(d.done).reduce((a,x)=>a+x.length*20,0);
+  const pct=Math.round(doneDays/90*100), dl=d.done[idx]||[];
+  const tag={"NGHE":"#2b7bd1","NÓI":"#d1373f","ĐỌC":"#3f9142","VIẾT":"#c9a24a"};
+  const ms=P90_MILESTONE.find(m=>doneDays<m[0]);
+  box.innerHTML=`
+  <div class="p90-head">
+    <div><b>📅 Plan 90 ngày · Sếp Aliza</b><br><small>Mục tiêu: HSK 2 giao tiếp thương mại · 80 phút/ngày · Nghe–Nói–Đọc–Viết</small></div>
+    <div class="p90-stats"><span>Ngày <b>${today+1}</b>/90</span><span>✅ ${doneDays} ngày đạt</span><span>🔥 ${streak} liên tiếp</span><span>⏱ ${Math.round(mins/60)} giờ</span></div>
+    <div class="p90-bar"><i style="width:${pct}%"></i></div>
+    <small>${ms?"🎯 Mốc kế: "+ms[1]:"🏆 Hoàn thành 90 ngày!"}</small>
+  </div>
+  <div class="p90-nav"><button id="p90Prev" ${idx<=0?"disabled":""}>◀</button>
+    <div><b>Ngày ${idx+1}${idx===today?" · HÔM NAY":""}</b><br><small>Tuần ${D.wk+1}: ${D.W.t} — ${D.type}</small></div>
+    <button id="p90Next" ${idx>=89?"disabled":""}>▶</button></div>
+  <div class="p90-card"><h4>📚 Bài hôm nay</h4>
+    ${D.words.map(w=>`<div class="p90-w"><span class="p90-hz">${w[0]}</span><span>${w[1]}<br><small>${w[2]}</small></span><button class="speak-btn" data-say="${w[0]}">🔊</button></div>`).join("")}
+    ${D.sent.map(s=>`<div class="p90-s"><div><b>${s[0]}</b><br>${s[1]}<br><small>${s[2]}</small></div><button class="speak-btn" data-say="${s[0]}">🔊</button><button class="speak-btn slow" data-say="${s[0]}" data-slow="1">🐢</button></div>`).join("")}
+    ${(!D.final&&D.dt===0)?`<p><small>📐 Ngữ pháp tuần: ${D.W.f}</small></p>`:""}
+  </div>
+  <div class="p90-card"><h4>✔️ 4 kỹ năng hôm nay (${dl.length}/4)</h4>
+    ${D.tasks.map((t,k)=>`<label class="p90-t ${dl.includes(k)?"ok":""}"><input type="checkbox" data-k="${k}" ${dl.includes(k)?"checked":""}>
+      <span class="p90-tag" style="background:${tag[t[1]]}">${t[1]}</span>
+      <span><small>${t[0]} · ${t[2]} phút</small><br>${t[3]}${t[4]?` <a href="#" data-go="${t[4]}">Mở ›</a>`:""}</span></label>`).join("")}
+    ${dl.length>=4?`<div class="p90-ok">🎉 Đạt ngày ${idx+1}! Sếp giỏi quá.</div>`:""}
+    <textarea id="p90Note" placeholder="Ghi chú / từ mới tự gặp hôm nay...">${d.notes[idx]||""}</textarea>
+  </div>
+  <div class="p90-card"><h4>🗺️ Bản đồ 90 ngày</h4><div class="p90-grid">
+    ${Array.from({length:90},(_,k)=>`<button data-day="${k}" class="${full(k)?"full":(d.done[k]||[]).length?"half":""} ${k===idx?"cur":""}">${k+1}</button>`).join("")}
+  </div><small>Ngày bắt đầu: <input type="date" id="p90Start" value="${d.start}"></small></div>`;
+  box.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>speak(b.dataset.say,b.dataset.slow?0.4:0.72));
+  box.querySelectorAll("input[data-k]").forEach(c=>c.onchange=()=>{const x=p90Load();x.done=x.done||{};let a=x.done[idx]||[];const k=+c.dataset.k;a=c.checked?[...new Set([...a,k])]:a.filter(v=>v!==k);x.done[idx]=a;p90Save(x);renderPlan90();});
+  box.querySelectorAll("[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();const b=document.querySelector(`nav button[data-tab="${a.dataset.go}"]`);if(b)b.click();});
+  box.querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>{p90View=+b.dataset.day;renderPlan90();});
+  document.getElementById("p90Prev").onclick=()=>{p90View=idx-1;renderPlan90();};
+  document.getElementById("p90Next").onclick=()=>{p90View=idx+1;renderPlan90();};
+  document.getElementById("p90Note").onchange=e=>{const x=p90Load();x.notes=x.notes||{};x.notes[idx]=e.target.value;p90Save(x);};
+  document.getElementById("p90Start").onchange=e=>{if(!e.target.value)return;if(!confirm("Đổi ngày bắt đầu?"))return renderPlan90();const x=p90Load();x.start=e.target.value;p90Save(x);p90View=null;renderPlan90();};
+}
+renderPlan90();
+</script>
+
 </body>
 </html>

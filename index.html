@@ -311,6 +311,7 @@
   .p90-songt{text-align:center;background:var(--paper);border-radius:12px;padding:10px;line-height:1.6}
   .p90-yt{display:block;text-align:center;text-decoration:none;margin-top:10px}
   .p90-grid .full{background:var(--green);color:#fff}.p90-grid .half{background:#f6e3b4}.p90-grid .cur{outline:2px solid var(--red)}
+  .tp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.tp-b{text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:8px;font-size:14px}.tp-b.lock{opacity:.5}.tp-b.full{background:#e3f1e3}.tp-b.half{background:#f6e3b4}.tp-tag{background:var(--red);color:#fff;border-radius:6px;padding:0 6px;font-size:12px}
 </style>
 </head>
 <body>
@@ -323,6 +324,7 @@
 
 <nav>
   <button data-tab="plan90" class="active">📅 Plan 90 ngày</button>
+  <button data-tab="topics">💬 Đàm thoại 100 chủ đề</button>
   <button data-tab="path">🗺️ Lộ trình</button>
   <button data-tab="vocab">📖 Từ vựng</button>
   <button data-tab="flash">🃏 Thẻ ghi nhớ</button>
@@ -336,6 +338,8 @@
 
   <!-- COURSE PATH -->
   <section id="plan90" class="panel active"><div id="plan90View"></div></section>
+
+  <section id="topics" class="panel"><div id="topicView"></div></section>
 
   <section id="path" class="panel">
     <div id="pathView"></div>
@@ -2029,10 +2033,10 @@ function p90Build(D,idx,ex){
   const pick=(pool,n)=>p90Shuffle(pool).slice(0,n);
   const distract=(q,pool,key)=>pick(pool.filter(w=>w[0]!==q[0]&&w[key]!==q[key]),3);
   const qs=[];
-  let wq=[...pick(today,Math.min(today.length,6)),...pick(uniq.filter(w=>!today.includes(w)),10)].slice(0,7);
-  while(wq.length<7)wq.push(...pick(today,7-wq.length));
-  let lq=p90Shuffle([...todayLines,...pick(lines.filter(l=>!todayLines.includes(l)),3)]).slice(0,3);
-  if(lq.length<3)lq.push(...pick(P90_DLG.slice(0,D.wk+1).flat().filter(l=>!lq.includes(l)),3-lq.length));
+  let wq=[...pick(today,Math.min(today.length,8)),...pick(uniq.filter(w=>!today.includes(w)),10)].slice(0,10);
+  while(wq.length<10)wq.push(...pick(today,10-wq.length));
+  let lq=p90Shuffle([...todayLines,...pick(lines.filter(l=>!todayLines.includes(l)),5)]).slice(0,5);
+  if(lq.length<5)lq.push(...pick(P90_DLG.slice(0,D.wk+1).flat().filter(l=>!lq.includes(l)),5-lq.length));
   if(lines.length<4)lines.push(...P90_DLG.slice(0,D.wk+2).flat().filter(l=>!lines.includes(l)));
   if(ex==="nghe"){
     wq.forEach((w,k)=>qs.push(k%2?{t:"Nghe và chọn NGHĨA đúng",say:w[0],ans:w,opts:[w,...distract(w,uniq,2)],lab:o=>o[2]}
@@ -2050,16 +2054,16 @@ function p90Build(D,idx,ex){
       const A=[w[0],me,w[2]];qs[k]={t:"Nghe và chọn PINYIN đúng thanh",say:w[0],ans:A,opts:[A,...others.map(v=>[w[0]+v,v,""])],big:w[0],py:w[2],lab:o=>`<span class="p90-hz2">${o[1]}</span>`};}
   }
   qs.forEach(q=>q.opts=p90Shuffle(q.opts));
-  return p90Shuffle(qs.slice(0,7)).concat(qs.slice(7));
+  return p90Shuffle(qs.slice(0,10)).concat(qs.slice(10));
 }
 /* ===== PHIÊN LUYỆN KIỂU THỬ THÁCH: tim, XP, combo, câu sai quay lại ===== */
 function p90SessionItems(D,idx,ex){
   const base=idx<7?p90PhonQs(idx,ex):p90Build(D,idx,ex);
-  const items=base.slice(0,7).map(q=>({type:"choice",...q}));
+  const items=base.slice(0,idx<7?14:12).map(q=>({type:"choice",...q}));
   // các dạng thêm: điền chỗ trống, chọn câu đáp, đúng/sai
   const recent=[];for(let j=Math.max(0,idx-4);j<=idx;j++)recent.push(p90Dlg(j));
   const dictW=[...p90Dict().values()];
-  const fillLines=idx<7?[]:p90Shuffle(recent.flat().filter(l=>p90Seg(l[0]).length>=2)).slice(0,2);
+  const fillLines=idx<7?[]:p90Shuffle(recent.flat().filter(l=>p90Seg(l[0]).length>=2)).slice(0,3);
   fillLines.forEach(l=>{const segs=p90Seg(l[0]);const k=Math.floor(Math.random()*segs.length);const w=segs[k];
     const blank=l[0].replace(w[0],"＿＿");const opts=[w,...p90Shuffle(dictW.filter(x=>x[0]!==w[0]&&x[0].length===w[0].length)).slice(0,3)];
     items.push({type:"choice",t:"Điền vào chỗ trống",big:blank,sm:1,py:l[2],say:ex==="nghe"?l[0]:null,ans:w,opts:p90Shuffle(opts),lab:o=>p90Tri(o),fb:`<b>${l[0]}</b> ${l[1]}`});});
@@ -2078,25 +2082,25 @@ function p90SessionItems(D,idx,ex){
                                        :{type:"match",t:ex==="nghe"?"Ghép âm thanh với chữ":"Ghép chữ với nghĩa",audio:ex==="nghe",pairs:pw});
   // xếp thẻ thành câu
   const lines=[];for(let j=Math.max(0,idx-3);j<=idx;j++)lines.push(...p90Dlg(j));
-  const cand=idx<7?[]:p90Shuffle(lines.filter(l=>{const s=p90Seg(l[0]);return s.length>=2&&s.map(w=>w[0]).join("")===l[0].replace(/[^一-鿿]/g,"");})).slice(0,2);
+  const cand=idx<7?[]:p90Shuffle(lines.filter(l=>{const s=p90Seg(l[0]);return s.length>=2&&s.map(w=>w[0]).join("")===l[0].replace(/[^一-鿿]/g,"");})).slice(0,3);
   const allw=[...p90Dict().values()];
   cand.forEach(l=>{const segs=p90Seg(l[0]);const extra=p90Shuffle(allw.filter(w=>!segs.some(s=>s[0]===w[0])&&w[0].length<=2)).slice(0,2);
     items.push({type:"build",t:ex==="nghe"?"Nghe và xếp lại câu vừa nghe":"Dịch sang tiếng Trung",say:l[0],vi:l[2],py:l[1],ans:segs.map(w=>w[0]),tiles:p90Shuffle([...segs,...extra]),listen:ex==="nghe"});});
   const head=items.slice(0,2),rest=p90Shuffle(items.slice(2));
-  return [...head,...rest].slice(0,15);
+  return [...head,...rest].slice(0,22);
 }
-function p90Choice(D,idx,ex){
-  const box=document.getElementById("p90ExBox");
-  const queue=p90SessionItems(D,idx,ex), total=queue.length;
+function p90Choice(D,idx,ex,cu){
+  const box=document.getElementById(cu&&cu.box||"p90ExBox");
+  const queue=cu?cu.make():p90SessionItems(D,idx,ex), total=queue.length;
   let hearts=5,xp=0,combo=0,done=0,first=0;const seenWrong=new Set();
   const head=()=>`<div class="dq-top"><div class="p90-prog dq-bar"><i style="width:${done/total*100}%"></i></div><span class="dq-h">❤️ ${hearts}</span><span class="dq-x">⚡${xp}</span></div>${combo>=3?`<div class="dq-combo">🔥 ${combo} câu đúng liên tiếp!</div>`:""}`;
   const finish=()=>{
     const ok=hearts>0;const acc=Math.round(first/total*100);
-    if(ok){const x=p90Load();x.xp=(x.xp||0)+xp;p90Save(x);p90Tick(idx,ex);}
+    if(ok){const x=p90Load();x.xp=(x.xp||0)+xp;p90Save(x);if(cu)cu.done();else p90Tick(idx,ex);}
     box.innerHTML=`<div class="dq-end ${ok?"good":""}"><div class="dq-big">${ok?"🏆":"💔"}</div><b>${ok?"Hoàn thành!":"Hết tim rồi!"}</b>
       <div class="dq-stats"><span>⚡ ${xp} XP</span><span>🎯 ${acc}% đúng ngay</span><span>❤️ ${hearts}</span></div>
       ${ok?"Đã tính xong phần này.":"Làm lại để thử thách tiếp nhé."}</div><div class="p90-row"><button class="p90-btn main p90-check" id="p90Again">${ok?"↻ Luyện thêm":"↻ Làm lại"}</button></div>`;
-    document.getElementById("p90Again").onclick=()=>p90Choice(D,idx,ex);};
+    document.getElementById("p90Again").onclick=()=>p90Choice(D,idx,ex,cu);};
   const sheet=(right,html,onNext)=>{
     if(right){combo++;xp+=10+(combo>=3?5:0);}else{combo=0;hearts--;}
     const el=document.createElement("div");el.className="dq-sheet "+(right?"ok":"bad");
@@ -2156,7 +2160,7 @@ function p90Snd(o){
 /* Ghép câu: chạm các mảnh theo đúng thứ tự */
 function p90Order(D,idx,done){
   const box=document.getElementById("p90ExBox");
-  const lines=p90Shuffle(p90Dlg(idx).filter(l=>p90Seg(l[0]).length>=2)).concat(D.sent).filter(l=>p90Seg(l[0]).length>=2).slice(0,3);
+  const lines=p90Shuffle(p90Dlg(idx).filter(l=>p90Seg(l[0]).length>=2)).concat(D.sent,p90Shuffle(p90Dlg(Math.max(0,idx-1)))).filter(l=>p90Seg(l[0]).length>=2).slice(0,5);
   let n=0,ok=0;
   const step=()=>{
     if(n>=lines.length){done(ok,lines.length);return;}
@@ -2177,7 +2181,7 @@ function p90Order(D,idx,done){
 }
 function p90Write(D,idx){
   const box=document.getElementById("p90ExBox");
-  const chars=[...new Set(D.words.map(w=>w[0]).join("").replace(/[^一-鿿]/g,""))].slice(0,8);
+  const chars=[...new Set(D.words.map(w=>w[0]).join("").replace(/[^一-鿿]/g,""))].slice(0,10);
   let i=0,miss=0;
   const step=()=>{
     if(i>=chars.length){box.innerHTML=`<div class="p90-res good">✍️ Viết xong ${chars.length} chữ (sai ${miss} nét). Tiếp: ghép câu…</div>`;
@@ -2193,17 +2197,17 @@ function p90Write(D,idx){
     document.getElementById("p90Skip").onclick=()=>{i++;step();};
   };step();
 }
-function p90Speak(D,idx){
-  const box=document.getElementById("p90ExBox"), SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function p90Speak(D,idx,cu){
+  const box=document.getElementById(cu&&cu.box||"p90ExBox"), SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const canRec=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
-  const items=[...p90Dlg(idx),...D.sent].slice(0,4); let i=0,pass=0;
+  const items=cu?cu.items:[...new Map([...p90Dlg(idx),...D.sent,...D.words.filter(w=>w[0].length>1)].map(x=>[x[0],x])).values()].slice(0,10); let i=0,pass=0;
   const clean=t=>t.replace(/[^一-鿿]/g,"");
   const sim=(a,b)=>{a=clean(a);b=clean(b);if(!a.length)return 0;let hit=0;const bb=[...b];for(const c of a){const j=bb.indexOf(c);if(j>-1){hit++;bb.splice(j,1);}}return hit/Math.max(a.length,b.length);};
   let rec=null,stream=null,recog=null,timer=null;
   const stopAll=()=>{try{recog&&recog.abort();}catch(e){}recog=null;clearTimeout(timer);try{rec&&rec.state!=="inactive"&&rec.stop();}catch(e){}};
   const step=()=>{
     stopAll();
-    if(i>=items.length){box.innerHTML=`<div class="p90-res good">🎉 Nói xong ${items.length} câu (${pass} câu đạt). Đã tính phần NÓI.</div><button class="p90-btn" id="p90Again">↻ Nói lại</button>`;p90Tick(idx,"noi");document.getElementById("p90Again").onclick=()=>p90Speak(D,idx);return;}
+    if(i>=items.length){box.innerHTML=`<div class="p90-res good">🎉 Nói xong ${items.length} câu (${pass} câu đạt). Đã tính phần NÓI.</div><button class="p90-btn" id="p90Again">↻ Nói lại</button>`;if(cu)cu.done();else p90Tick(idx,"noi");document.getElementById("p90Again").onclick=()=>p90Speak(D,idx,cu);return;}
     const it=items[i];
     box.innerHTML=`<p class="p90-q"><small>Câu ${i+1}/${items.length}</small><br><b class="dq-t">Nghe mẫu rồi đọc to</b></p>
       <div class="p90-say"><b class="p90-hz2">${it[0]}</b><br>${it[1]}<br><small>${it[2]}</small></div>
@@ -2246,20 +2250,20 @@ function p90Speak(D,idx){
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{try{if(typeof convoStop==="function")convoStop();else speechSynthesis.cancel();}catch(e){}}));
 /* ===== ÂM TIẾT: 7 ngày nền tảng ===== */
 const P90_PHON=[
-{t:"4 thanh điệu + thanh nhẹ",tip:"Tiếng Trung có 4 thanh + thanh nhẹ. Cùng âm \"ma\" mà đổi thanh là đổi nghĩa. Thanh 1 = ngang cao (như không dấu, kéo dài); 2 = đi lên (như dấu sắc); 3 = xuống thấp rồi lên (gần dấu hỏi); 4 = rơi mạnh (như dấu huyền nhưng gắt); nhẹ = đọc ngắn, nhẹ.",
- it:[["mā","妈","mẹ","thanh 1"],["má","麻","tê","thanh 2"],["mǎ","马","ngựa","thanh 3"],["mà","骂","mắng","thanh 4"],["ma","吗","(hỏi)","thanh nhẹ"],["bā","八","tám","thanh 1"],["bá","拔","nhổ","thanh 2"],["bǎ","把","cầm","thanh 3"],["bà","爸","bố","thanh 4"]]},
-{t:"6 vận mẫu đơn a o e i u ü",tip:"a: há miệng như \"a\". o: tròn môi như \"ô-ua\". e: như \"ưa\" (không phải \"e\"!). i: như \"i\". u: như \"u\". ü: chu môi nói \"uy\" — giữ môi tròn.",
- it:[["a","八","bā · tám"],["o","波","bō · sóng"],["e","饿","è · đói"],["i","一","yī · một"],["u","五","wǔ · năm"],["ü","鱼","yú · cá"],["ü","女","nǚ · nữ"],["e","喝","hē · uống"]]},
-{t:"Thanh mẫu b p m f · d t n l",tip:"b/d: như \"p/t\" tiếng Việt (không bật hơi). p/t: bật mạnh hơi ra (đặt tay trước miệng thấy gió). m n l f: giống tiếng Việt.",
- it:[["b","八","bā · tám"],["p","爬","pá · bò"],["m","妈","mā · mẹ"],["f","发","fā · gửi"],["d","大","dà · to"],["t","他","tā · anh ấy"],["n","你","nǐ · bạn"],["l","来","lái · đến"]]},
-{t:"Thanh mẫu g k h · j q x",tip:"g: như \"c\" (không bật hơi). k: \"kh\" bật hơi mạnh. h: như \"h\" khàn trong cổ. j: như \"ch\" nhẹ. q: như \"ch\" bật hơi. x: như \"x\" (xì). j q x luôn đi với i/ü.",
+{t:"4 thanh điệu + 6 vận mẫu đơn a o e i u ü",tip:"Cùng âm \"ma\" mà đổi thanh là đổi nghĩa. Thanh 1 ngang cao, kéo dài. Thanh 2 đi lên (gần dấu sắc). Thanh 3 xuống thấp rồi lên (gần dấu hỏi). Thanh 4 rơi mạnh. Thanh nhẹ đọc ngắn. Vận mẫu đơn: a há miệng · o tròn môi \"ô-ua\" · e như \"ưa\" · i · u · ü chu môi nói \"uy\".",
+ it:[["mā","妈","mẹ","thanh 1"],["má","麻","tê","thanh 2"],["mǎ","马","ngựa","thanh 3"],["mà","骂","mắng","thanh 4"],["ma","吗","(hỏi)","thanh nhẹ"],["bā","八","tám","a"],["bō","波","sóng","o"],["è","饿","đói","e"],["yī","一","một","i"],["wǔ","五","năm","u"],["yú","鱼","cá","ü"]]},
+{t:"Cụm MÔI b p m f · cụm ĐẦU LƯỠI GIỮA d t n l",tip:"MÔI: b p m hai môi chạm nhau rồi mở; f răng trên chạm môi dưới. ĐẦU LƯỠI GIỮA: đầu lưỡi chạm lợi trên. n đi qua mũi, l hơi đi hai bên lưỡi. Cặp không bật hơi / bật hơi: b–p, d–t (đặt tay trước miệng, p t thấy gió).",
+ it:[["b","八","bā · tám"],["p","爬","pá · bò"],["m","妈","mā · mẹ"],["f","发","fā · gửi"],["d","大","dà · to"],["t","他","tā · anh ấy"],["n","你","nǐ · bạn"],["l","来","lái · đến"],["n","男","nán · nam"],["l","蓝","lán · xanh lam"]]},
+{t:"Cụm CUỐNG LƯỠI g k h · cụm MẶT LƯỠI j q x",tip:"CUỐNG LƯỠI: cuống lưỡi nâng sát vòm mềm. g như \"c\", k bật hơi như \"kh\" mạnh, h khàn trong cổ. MẶT LƯỠI: đầu lưỡi tì răng dưới, mặt lưỡi áp vòm cứng. j như \"ch\" nhẹ, q \"ch\" bật hơi, x như \"x\". j q x chỉ đi với i, ü. Cặp: g–k, j–q.",
  it:[["g","哥","gē · anh trai"],["k","可","kě · có thể"],["h","喝","hē · uống"],["j","鸡","jī · gà"],["q","七","qī · bảy"],["x","西","xī · tây"],["j","家","jiā · nhà"],["x","谢","xiè · cảm ơn"]]},
-{t:"Thanh mẫu zh ch sh r · z c s",tip:"zh ch sh r: cong lưỡi lên vòm (âm \"tr\" của miền Bắc nặng). z c s: lưỡi thẳng, chạm răng (z như \"ch\" nhẹ, c như \"ts\" bật hơi, s như \"x\"). Sau 7 âm này, chữ \"i\" đọc như \"ư\": zhi = \"trư\", si = \"xư\".",
- it:[["zh","知","zhī · biết"],["ch","吃","chī · ăn"],["sh","是","shì · là"],["r","日","rì · ngày"],["z","字","zì · chữ"],["c","次","cì · lần"],["s","四","sì · bốn"],["sh","十","shí · mười"]]},
-{t:"Vận mẫu kép & vần mũi",tip:"ai = \"ai\", ei = \"ây\", ao = \"ao\", ou = \"âu\". -n đọc đầu lưỡi (an, en, in); -ng đọc trong cổ (ang, eng, ing, ong). Phân biệt rõ -n / -ng!",
- it:[["ai","爱","ài · yêu"],["ei","北","běi · bắc"],["ao","好","hǎo · tốt"],["ou","走","zǒu · đi"],["an","看","kàn · xem"],["ang","忙","máng · bận"],["en","很","hěn · rất"],["eng","冷","lěng · lạnh"],["in","今","jīn · nay"],["ing","请","qǐng · mời"],["ong","红","hóng · đỏ"],["ian","天","tiān · trời"]]},
+{t:"UỐN LƯỠI zh ch sh r ↔ LƯỠI THẲNG z c s",tip:"UỐN LƯỠI: đầu lưỡi cong lên chạm vòm cứng (gần \"tr, s\" uốn lưỡi). LƯỠI THẲNG: đầu lưỡi tì sau răng cửa trên (z như \"ch\" nhẹ, c như \"ts\" bật hơi, s như \"x\"). Đọc đối chiếu từng cặp zh–z, ch–c, sh–s. Sau 7 âm này, i đọc như \"ư\": zhi \"trư\", si \"xư\".",
+ it:[["zh","知","zhī · biết"],["z","字","zì · chữ"],["ch","吃","chī · ăn"],["c","次","cì · lần"],["sh","是","shì · là"],["s","四","sì · bốn"],["r","日","rì · ngày"],["sh","十","shí · mười"]]},
+{t:"Vận mẫu kép",tip:"ai = \"ai\", ei = \"ây\", ao = \"ao\", ou = \"âu\", ia = \"ia\", ie = \"iê\", ua = \"oa\", uo = \"ua-ô\", üe = \"uy-ê\". Đứng đầu: i viết y (yě), u viết w (wǒ). iou viết iu (liù), uei viết ui (duì).",
+ it:[["ai","爱","ài · yêu"],["ei","北","běi · bắc"],["ao","好","hǎo · tốt"],["ou","走","zǒu · đi"],["ie","谢","xiè · cảm ơn"],["uo","我","wǒ · tôi"],["üe","学","xué · học"],["iao","叫","jiào · gọi"],["iu","六","liù · sáu"],["ui","对","duì · đúng"]]},
+{t:"Vần mũi -n / -ng · âm 儿",tip:"-n: kết thúc bằng đầu lưỡi chạm lợi trên (an, en, in, ian). -ng: kết thúc trong cổ, miệng mở (ang, eng, ing, ong). Đọc đối chiếu an–ang, en–eng, in–ing. er: uốn lưỡi khi đọc \"ơ\".",
+ it:[["an","看","kàn · xem"],["ang","忙","máng · bận"],["en","很","hěn · rất"],["eng","冷","lěng · lạnh"],["in","今","jīn · nay"],["ing","请","qǐng · mời"],["ong","红","hóng · đỏ"],["ian","天","tiān · trời"],["er","二","èr · hai"]]},
 {t:"Quy tắc biến điệu & ôn tập",tip:"① 3+3 → thanh 2 + 3: nǐ hǎo đọc \"ní hǎo\". ② 不 bù trước thanh 4 → bú: bú shì. ③ 一 yī trước thanh 4 → yí (yí ge), trước 1/2/3 → yì (yìqǐ). ④ ü sau j q x y viết thành u: qù, yú. ⑤ Thanh nhẹ: māma, xièxie.",
- it:[["3+3","你好","nǐ hǎo → ní hǎo"],["不+4","不是","bú shì"],["一+4","一个","yí ge"],["一+3","一起","yìqǐ"],["ü→u","去","qù · đi"],["nhẹ","妈妈","māma"],["nhẹ","谢谢","xièxie"],["er","二","èr · hai"]]}
+ it:[["3+3","你好","nǐ hǎo → ní hǎo"],["不+4","不是","bú shì"],["一+4","一个","yí ge"],["一+3","一起","yìqǐ"],["ü→u","去","qù · đi"],["nhẹ","妈妈","māma"],["nhẹ","谢谢","xièxie"],["3+3","可以","kěyǐ → kéyǐ"]]}
 ];
 const P90_TM={"ā":["a",1],"á":["a",2],"ǎ":["a",3],"à":["a",4],"ē":["e",1],"é":["e",2],"ě":["e",3],"è":["e",4],"ī":["i",1],"í":["i",2],"ǐ":["i",3],"ì":["i",4],"ō":["o",1],"ó":["o",2],"ǒ":["o",3],"ò":["o",4],"ū":["u",1],"ú":["u",2],"ǔ":["u",3],"ù":["u",4],"ǖ":["ü",1],"ǘ":["ü",2],"ǚ":["ü",3],"ǜ":["ü",4]};
 const P90_MK={a:"āáǎà",e:"ēéěè",i:"īíǐì",o:"ōóǒò",u:"ūúǔù","ü":"ǖǘǚǜ"};
@@ -2289,9 +2293,9 @@ function p90PhonQs(idx,ex){
   const items=[];for(let j=0;j<=Math.min(idx,6);j++)P90_PHON[j].it.forEach(x=>items.push({...{lab:x[0],c:x[1],info:x[2]},day:j}));
   const today=items.filter(x=>x.day===Math.min(idx,6));
   const pick=(a,n)=>p90Shuffle(a).slice(0,n);
-  const pool=[...pick(today,7),...pick(items.filter(x=>x.day!==Math.min(idx,6)),3)];while(pool.length<10)pool.push(...pick(today,10-pool.length));
+  const pool=[...pick(today,10),...pick(items.filter(x=>x.day!==Math.min(idx,6)),4)];while(pool.length<14)pool.push(...pick(today,14-pool.length));
   const pyOf=x=>x.info.split("·")[0].split("→").pop().trim();
-  return pool.slice(0,10).map((x,k)=>{
+  return pool.slice(0,14).map((x,k)=>{
     const mean=(x.info.split("·")[1]||x.info).trim();const py=x.day===0?x.lab:pyOf(x), syl=p90Syls(py)[0]||{raw:py,tone:0};
     const ans=[x.c,py,x.info];
     if(ex==="nghe"&&k%2===0){ // nghe chọn thanh
@@ -2310,16 +2314,164 @@ function p90PhonQs(idx,ex){
   });
 }
 const P90_EXINFO={
- nghe:["🎧 NGHE","Rèn tai nhận ra âm & thanh điệu, hiểu câu khi chỉ nghe.","Bài tập: 10 câu — nghe từ chọn chữ, nghe từ chọn nghĩa, nghe câu hội thoại chọn nghĩa. Đạt khi đúng 8/10.",0],
- doc:["📖 ĐỌC","Rèn nhận mặt chữ Hán không cần Pinyin.","Bài tập: 10 câu — nhìn chữ chọn nghĩa, nhìn Pinyin chọn chữ, đọc câu chữ Hán chọn nghĩa. Đạt khi đúng 8/10.",2],
- viet:["✍️ VIẾT","Rèn viết tay đúng thứ tự nét và đặt câu đúng trật tự từ.","Bài tập: tự viết các chữ hôm nay vào ô (sai nét app báo) → ghép các mảnh thành câu đúng.",1],
- noi:["🎤 NÓI","Rèn phát âm chuẩn và phản xạ nói câu hoàn chỉnh.","Bài tập: nghe mẫu từng câu hội thoại → bấm 🎤 đọc to, máy chấm % khớp (≥70% là chuẩn).",3]};
+ nghe:["🎧 NGHE","Rèn tai nhận ra âm & thanh điệu, hiểu câu khi chỉ nghe.","Bài tập: khoảng 20 câu — nghe chọn chữ, nghe chọn nghĩa, nghe câu chọn nghĩa, điền chỗ trống, chọn câu đáp, xếp câu vừa nghe.",0],
+ doc:["📖 ĐỌC","Rèn nhận mặt chữ Hán không cần Pinyin.","Bài tập: khoảng 20 câu — chữ chọn nghĩa, nghĩa chọn chữ, đọc câu chọn nghĩa, điền chỗ trống, ghép cặp, dịch câu bằng thẻ từ.",2],
+ viet:["✍️ VIẾT","Rèn viết tay đúng thứ tự nét và đặt câu đúng trật tự từ.","Bài tập: tự viết 10 chữ hôm nay vào ô (sai nét app báo) → ghép 5 câu đúng trật tự.",1],
+ noi:["🎤 NÓI","Rèn phát âm chuẩn và phản xạ nói câu hoàn chỉnh.","Bài tập: 10 câu, cụm từ — nghe mẫu → 🎤 máy chấm hoặc ⏺ ghi âm so mẫu.",3]};
 function p90RunEx(D,idx){
   const g=document.getElementById("p90ExGuide"),I=P90_EXINFO[p90Ex],t=D.tasks[I[3]];
-  if(g&&idx<7&&(p90Ex==="nghe"||p90Ex==="doc")){g.innerHTML=`<b>${I[0]} · Tuần âm tiết (ngày ${idx+1}/7)</b><br>🎯 ${p90Ex==="nghe"?"Nghe phân biệt thanh điệu và chọn đúng Pinyin.":"Nhìn Pinyin nhận ra thanh điệu và âm đầu."}<br>📌 Hôm nay: ${P90_PHON[idx].t}<br>📝 10 câu, đúng 8/10 là đạt.`;}
+  if(g&&idx<7&&(p90Ex==="nghe"||p90Ex==="doc")){g.innerHTML=`<b>${I[0]} · Tuần âm tiết (ngày ${idx+1}/7)</b><br>🎯 ${p90Ex==="nghe"?"Nghe phân biệt thanh điệu và chọn đúng Pinyin.":"Nhìn Pinyin nhận ra thanh điệu và âm đầu."}<br>📌 Hôm nay: ${P90_PHON[idx].t}<br>📝 Khoảng 20 câu, câu sai quay lại cuối bài.`;}
   else if(g)g.innerHTML=`<b>${I[0]} · ${t?t[0]+" "+t[2]+" phút":""}</b><br>🎯 ${I[1]}<br>📌 Hôm nay: ${t?t[3]:""}<br>📝 ${I[2]}`;
   ({nghe:()=>p90Choice(D,idx,"nghe"),doc:()=>p90Choice(D,idx,"doc"),viet:()=>p90Write(D,idx),noi:()=>p90Speak(D,idx)})[p90Ex]();}
 renderPlan90();
+/* ===== ĐÀM THOẠI THEO CHỦ ĐỀ: 100 chủ đề, 5 cấp ===== */
+const TP_LV=["Cấp 1 · HSK 1","Cấp 2 · HSK 2","Cấp 3 · HSK 3","Cấp 4 · HSK 4","Cấp 5 · Thương mại"];
+const TP_NAMES=["Chào hỏi, tạm biệt","Cảm ơn, xin lỗi","Tên, họ","Quốc tịch","Nghề nghiệp","Gia đình","Tuổi tác","Số đếm","Ngày, thứ, tháng","Giờ giấc","Ăn uống cơ bản","Mua đồ, hỏi giá","Đồ vật quanh mình","Nơi chốn","Thời tiết","Khả năng","Xin phép","Gọi điện, số điện thoại","Đi lại bằng gì","Sở thích",
+"Thói quen hằng ngày","Ở nhà hàng, gọi món","Hỏi đường","Màu sắc, quần áo","Mua sắm, mặc cả","Sức khoẻ, đi khám","Thể thao","Bạn bè, hẹn gặp","Học tập","Công việc, đồng nghiệp","Thuê nhà, nơi ở","Du lịch ngắn","Phương tiện công cộng","Sinh nhật, quà tặng","So sánh","Kinh nghiệm đã làm","Đang làm gì","Dự định cuối tuần","Mời và từ chối","Mùa và khí hậu",
+"Giới thiệu bản thân chi tiết","Tính cách","Ngoại hình","Nhà cửa, đồ đạc","Nấu ăn","Ngân hàng, đổi tiền","Chuyển phát","Khách sạn","Sân bay","Mua sắm online","Điện thoại, mạng xã hội","Lễ tết Trung Quốc","Phim ảnh, âm nhạc","Kể chuyện đã xảy ra","Phàn nàn, góp ý","Hẹn và đổi lịch","Xin nghỉ, xin việc","Văn hoá Trung–Việt","Môi trường, thành phố","Kế hoạch tương lai",
+"Nêu ý kiến","Thuyết phục","Giải thích nguyên nhân","Điều kiện, giả định","Nhượng bộ","Công nghệ, AI","Giáo dục con cái","Sức khoẻ, lối sống","Tài chính cá nhân","Tin tức","Tình cảm, hôn nhân","Quản lý thời gian","Phỏng vấn tuyển dụng","Họp nhóm","Thuyết trình ngắn","Giải quyết mâu thuẫn","Khiếu nại dịch vụ","Văn hoá doanh nghiệp","Kể kinh nghiệm","Tranh luận nhẹ",
+"Danh thiếp, chức vụ","Hẹn lịch qua WeChat","Đón khách sân bay","Mời cơm, bàn tiệc","Giới thiệu công ty","Nhu cầu khách hàng","Hỏi báo giá","Mẫu hàng","Mặc cả giá","MOQ, số lượng","Thời gian giao hàng","Thanh toán","Hợp đồng","Vận chuyển, hải quan","Chất lượng, kiểm hàng","Tham quan nhà xưởng","Hội chợ, gian hàng","Đại lý, hợp tác","Xử lý phát sinh","Giữ quan hệ lâu dài"];
+/* Nội dung cấp 1: w=chữ/từ, c=cụm từ, s=câu mẫu, d=đàm thoại A/B. Em tự soạn theo từ HSK 1, chưa có giáo viên duyệt. */
+const TP_DATA={
+1:{w:[["你好","nǐ hǎo","xin chào"],["您","nín","ngài (lịch sự)"],["早","zǎo","sớm, chào buổi sáng"],["再见","zàijiàn","tạm biệt"],["明天","míngtiān","ngày mai"],["老师","lǎoshī","giáo viên"],["们","men","(số nhiều)"],["见","jiàn","gặp"]],
+ c:[["您好","nín hǎo","chào ngài"],["老师好","lǎoshī hǎo","chào thầy/cô"],["你们好","nǐmen hǎo","chào các bạn"],["明天见","míngtiān jiàn","mai gặp"],["早上好","zǎoshang hǎo","chào buổi sáng"]],
+ s:[["你好！","Nǐ hǎo!","Xin chào!"],["老师，您好！","Lǎoshī, nín hǎo!","Chào thầy ạ!"],["明天见！","Míngtiān jiàn!","Mai gặp nhé!"],["再见！","Zàijiàn!","Tạm biệt!"]],
+ d:[["王老师，您好！","Wáng lǎoshī, nín hǎo!","Chào thầy Vương ạ!"],["你好！","Nǐ hǎo!","Chào em!"],["老师，再见！","Lǎoshī, zàijiàn!","Thầy ơi, tạm biệt ạ!"],["再见，明天见！","Zàijiàn, míngtiān jiàn!","Tạm biệt, mai gặp!"]]},
+2:{w:[["谢谢","xièxie","cảm ơn"],["不客气","bú kèqi","đừng khách sáo"],["对不起","duìbuqǐ","xin lỗi"],["没关系","méi guānxi","không sao"],["请","qǐng","mời, xin"],["喝","hē","uống"],["茶","chá","trà"],["不","bù","không"]],
+ c:[["谢谢你","xièxie nǐ","cảm ơn bạn"],["谢谢老师","xièxie lǎoshī","cảm ơn thầy"],["请喝茶","qǐng hē chá","mời uống trà"],["不客气","bú kèqi","không có gì"],["没关系","méi guānxi","không sao đâu"]],
+ s:[["谢谢你！","Xièxie nǐ!","Cảm ơn bạn!"],["不客气。","Bú kèqi.","Không có gì."],["对不起！","Duìbuqǐ!","Xin lỗi!"],["没关系。","Méi guānxi.","Không sao."]],
+ d:[["请喝茶。","Qǐng hē chá.","Mời anh uống trà."],["谢谢！","Xièxie!","Cảm ơn!"],["不客气。","Bú kèqi.","Không có gì."],["对不起，我来晚了。","Duìbuqǐ, wǒ lái wǎn le.","Xin lỗi, tôi đến muộn."],["没关系。","Méi guānxi.","Không sao."]]},
+3:{w:[["叫","jiào","gọi, tên là"],["什么","shénme","gì"],["名字","míngzi","tên"],["我","wǒ","tôi"],["你","nǐ","bạn"],["姓","xìng","họ"],["是","shì","là"],["认识","rènshi","quen biết"]],
+ c:[["你的名字","nǐ de míngzi","tên của bạn"],["叫什么","jiào shénme","tên gì"],["我姓李","wǒ xìng Lǐ","tôi họ Lý"],["很高兴","hěn gāoxìng","rất vui"],["认识你","rènshi nǐ","quen bạn"]],
+ s:[["你叫什么名字？","Nǐ jiào shénme míngzi?","Bạn tên là gì?"],["我叫李明。","Wǒ jiào Lǐ Míng.","Tôi tên Lý Minh."],["您贵姓？","Nín guì xìng?","Ngài họ gì ạ?"],["认识你很高兴。","Rènshi nǐ hěn gāoxìng.","Rất vui được quen bạn."]],
+ d:[["你好！你叫什么名字？","Nǐ hǎo! Nǐ jiào shénme míngzi?","Chào chị! Chị tên là gì?"],["我叫阿丽。你呢？","Wǒ jiào Ā Lì. Nǐ ne?","Tôi tên A Lệ. Còn anh?"],["我姓王，叫王大明。","Wǒ xìng Wáng, jiào Wáng Dàmíng.","Tôi họ Vương, tên Vương Đại Minh."],["认识你很高兴！","Rènshi nǐ hěn gāoxìng!","Rất vui được quen anh!"]]},
+4:{w:[["国","guó","nước"],["人","rén","người"],["哪","nǎ","nào"],["中国","Zhōngguó","Trung Quốc"],["越南","Yuènán","Việt Nam"],["吗","ma","(câu hỏi)"],["也","yě","cũng"],["都","dōu","đều"]],
+ c:[["哪国人","nǎ guó rén","người nước nào"],["中国人","Zhōngguó rén","người Trung Quốc"],["越南人","Yuènán rén","người Việt Nam"],["也是","yě shì","cũng là"],["不是","bú shì","không phải"]],
+ s:[["你是哪国人？","Nǐ shì nǎ guó rén?","Bạn là người nước nào?"],["我是越南人。","Wǒ shì Yuènán rén.","Tôi là người Việt Nam."],["你是中国人吗？","Nǐ shì Zhōngguó rén ma?","Bạn là người Trung Quốc à?"],["我们都是越南人。","Wǒmen dōu shì Yuènán rén.","Chúng tôi đều là người Việt."]],
+ d:[["你是中国人吗？","Nǐ shì Zhōngguó rén ma?","Chị là người Trung Quốc à?"],["不是，我是越南人。你呢？","Bú shì, wǒ shì Yuènán rén. Nǐ ne?","Không, tôi là người Việt Nam. Còn anh?"],["我是中国人。","Wǒ shì Zhōngguó rén.","Tôi là người Trung Quốc."],["他也是中国人吗？","Tā yě shì Zhōngguó rén ma?","Anh ấy cũng là người Trung Quốc à?"],["是，我们都是中国人。","Shì, wǒmen dōu shì Zhōngguó rén.","Vâng, chúng tôi đều là người Trung Quốc."]]},
+5:{w:[["做","zuò","làm"],["工作","gōngzuò","công việc, làm việc"],["医生","yīshēng","bác sĩ"],["老板","lǎobǎn","ông chủ"],["学生","xuésheng","học sinh"],["公司","gōngsī","công ty"],["在","zài","ở, tại"],["经理","jīnglǐ","giám đốc"]],
+ c:[["做什么工作","zuò shénme gōngzuò","làm nghề gì"],["在公司工作","zài gōngsī gōngzuò","làm ở công ty"],["一个老板","yí ge lǎobǎn","một ông chủ"],["是医生","shì yīshēng","là bác sĩ"],["大学生","dàxuéshēng","sinh viên"]],
+ s:[["你做什么工作？","Nǐ zuò shénme gōngzuò?","Bạn làm nghề gì?"],["我是老板。","Wǒ shì lǎobǎn.","Tôi là chủ doanh nghiệp."],["她在医院工作。","Tā zài yīyuàn gōngzuò.","Cô ấy làm ở bệnh viện."],["你在哪儿工作？","Nǐ zài nǎr gōngzuò?","Bạn làm ở đâu?"]],
+ d:[["你做什么工作？","Nǐ zuò shénme gōngzuò?","Chị làm nghề gì?"],["我是老板，有一个公司。","Wǒ shì lǎobǎn, yǒu yí ge gōngsī.","Tôi làm chủ, có một công ty."],["你的公司在哪儿？","Nǐ de gōngsī zài nǎr?","Công ty chị ở đâu?"],["在胡志明市。你呢？","Zài Húzhìmíng Shì. Nǐ ne?","Ở TP Hồ Chí Minh. Còn anh?"],["我是经理，在北京工作。","Wǒ shì jīnglǐ, zài Běijīng gōngzuò.","Tôi là giám đốc, làm ở Bắc Kinh."]]},
+6:{w:[["家","jiā","nhà"],["爸爸","bàba","bố"],["妈妈","māma","mẹ"],["哥哥","gēge","anh trai"],["姐姐","jiějie","chị gái"],["弟弟","dìdi","em trai"],["女儿","nǚ'ér","con gái"],["口","kǒu","(lượng từ người)"]],
+ c:[["我家","wǒ jiā","nhà tôi"],["几口人","jǐ kǒu rén","mấy người"],["四口人","sì kǒu rén","bốn người"],["一个女儿","yí ge nǚ'ér","một con gái"],["没有哥哥","méiyǒu gēge","không có anh trai"]],
+ s:[["你家有几口人？","Nǐ jiā yǒu jǐ kǒu rén?","Nhà bạn có mấy người?"],["我家有四口人。","Wǒ jiā yǒu sì kǒu rén.","Nhà tôi có bốn người."],["这是我妈妈。","Zhè shì wǒ māma.","Đây là mẹ tôi."],["你有孩子吗？","Nǐ yǒu háizi ma?","Bạn có con không?"]],
+ d:[["你家有几口人？","Nǐ jiā yǒu jǐ kǒu rén?","Nhà chị có mấy người?"],["四口人。爸爸、妈妈、弟弟和我。","Sì kǒu rén. Bàba, māma, dìdi hé wǒ.","Bốn người. Bố, mẹ, em trai và tôi."],["你弟弟多大？","Nǐ dìdi duō dà?","Em trai chị bao nhiêu tuổi?"],["他二十岁，是大学生。你呢？","Tā èrshí suì, shì dàxuéshēng. Nǐ ne?","Em ấy 20 tuổi, là sinh viên. Còn anh?"],["我有一个女儿，五岁了。","Wǒ yǒu yí ge nǚ'ér, wǔ suì le.","Tôi có một con gái, 5 tuổi rồi."]]},
+7:{w:[["岁","suì","tuổi"],["多大","duō dà","bao nhiêu tuổi"],["几","jǐ","mấy"],["今年","jīnnián","năm nay"],["了","le","rồi"],["孩子","háizi","đứa trẻ, con"],["儿子","érzi","con trai"],["年","nián","năm"]],
+ c:[["几岁","jǐ suì","mấy tuổi (trẻ em)"],["多大了","duō dà le","bao nhiêu tuổi rồi"],["今年三十岁","jīnnián sānshí suì","năm nay 30 tuổi"],["我儿子","wǒ érzi","con trai tôi"],["多大年纪","duō dà niánjì","bao nhiêu tuổi (người lớn)"]],
+ s:[["你今年多大？","Nǐ jīnnián duō dà?","Năm nay bạn bao nhiêu tuổi?"],["我今年四十岁。","Wǒ jīnnián sìshí suì.","Năm nay tôi 40 tuổi."],["你儿子几岁了？","Nǐ érzi jǐ suì le?","Con trai bạn mấy tuổi rồi?"],["他八岁了。","Tā bā suì le.","Bé 8 tuổi rồi."]],
+ d:[["你孩子几岁了？","Nǐ háizi jǐ suì le?","Con chị mấy tuổi rồi?"],["我儿子八岁，女儿五岁。","Wǒ érzi bā suì, nǚ'ér wǔ suì.","Con trai tôi 8 tuổi, con gái 5 tuổi."],["你今年多大？","Nǐ jīnnián duō dà?","Năm nay chị bao nhiêu tuổi?"],["我四十岁了。","Wǒ sìshí suì le.","Tôi 40 tuổi rồi."]]},
+8:{w:[["一","yī","một"],["二","èr","hai"],["三","sān","ba"],["十","shí","mười"],["百","bǎi","trăm"],["两","liǎng","hai (đếm vật)"],["个","gè","cái, chiếc"],["号","hào","số"]],
+ c:[["两个人","liǎng ge rén","hai người"],["十个","shí ge","mười cái"],["一百","yìbǎi","một trăm"],["几个","jǐ ge","mấy cái"],["八号","bā hào","số 8"]],
+ s:[["一、二、三、四、五。","Yī, èr, sān, sì, wǔ.","Một, hai, ba, bốn, năm."],["我要两个。","Wǒ yào liǎng ge.","Tôi lấy hai cái."],["你要几个？","Nǐ yào jǐ ge?","Bạn lấy mấy cái?"],["这里有一百个人。","Zhèlǐ yǒu yìbǎi ge rén.","Ở đây có một trăm người."]],
+ d:[["你要几个？","Nǐ yào jǐ ge?","Chị lấy mấy cái?"],["我要三个。","Wǒ yào sān ge.","Tôi lấy ba cái."],["三个？好。","Sān ge? Hǎo.","Ba cái? Được."],["不，四个，谢谢！","Bù, sì ge, xièxie!","À không, bốn cái, cảm ơn!"]]},
+9:{w:[["今天","jīntiān","hôm nay"],["昨天","zuótiān","hôm qua"],["星期","xīngqī","tuần, thứ"],["月","yuè","tháng"],["号","hào","ngày (mùng)"],["生日","shēngrì","sinh nhật"],["几号","jǐ hào","ngày mấy"],["周末","zhōumò","cuối tuần"]],
+ c:[["星期一","xīngqīyī","thứ Hai"],["星期天","xīngqītiān","Chủ nhật"],["十月一号","shí yuè yī hào","ngày 1 tháng 10"],["几月几号","jǐ yuè jǐ hào","ngày mấy tháng mấy"],["我的生日","wǒ de shēngrì","sinh nhật tôi"]],
+ s:[["今天几号？","Jīntiān jǐ hào?","Hôm nay ngày mấy?"],["今天星期几？","Jīntiān xīngqī jǐ?","Hôm nay thứ mấy?"],["今天星期五。","Jīntiān xīngqīwǔ.","Hôm nay thứ Sáu."],["你的生日是几月几号？","Nǐ de shēngrì shì jǐ yuè jǐ hào?","Sinh nhật bạn ngày mấy tháng mấy?"]],
+ d:[["今天几号？","Jīntiān jǐ hào?","Hôm nay ngày mấy?"],["今天十一月二十号。","Jīntiān shíyī yuè èrshí hào.","Hôm nay ngày 20 tháng 11."],["星期几？","Xīngqī jǐ?","Thứ mấy?"],["星期四。明天是我的生日！","Xīngqīsì. Míngtiān shì wǒ de shēngrì!","Thứ Năm. Mai là sinh nhật tôi!"],["生日快乐！","Shēngrì kuàilè!","Chúc mừng sinh nhật!"]]},
+10:{w:[["现在","xiànzài","bây giờ"],["点","diǎn","giờ"],["分","fēn","phút"],["半","bàn","rưỡi"],["上午","shàngwǔ","buổi sáng"],["下午","xiàwǔ","buổi chiều"],["时候","shíhou","lúc"],["中午","zhōngwǔ","buổi trưa"]],
+ c:[["几点","jǐ diǎn","mấy giờ"],["三点半","sān diǎn bàn","ba giờ rưỡi"],["下午两点","xiàwǔ liǎng diǎn","hai giờ chiều"],["什么时候","shénme shíhou","khi nào"],["十分","shí fēn","mười phút"]],
+ s:[["现在几点？","Xiànzài jǐ diǎn?","Bây giờ mấy giờ?"],["现在九点十分。","Xiànzài jiǔ diǎn shí fēn.","Bây giờ 9 giờ 10 phút."],["你什么时候去？","Nǐ shénme shíhou qù?","Khi nào bạn đi?"],["我下午三点去。","Wǒ xiàwǔ sān diǎn qù.","Tôi đi lúc 3 giờ chiều."]],
+ d:[["现在几点？","Xiànzài jǐ diǎn?","Bây giờ mấy giờ rồi?"],["十点半。","Shí diǎn bàn.","Mười giờ rưỡi."],["我们什么时候开会？","Wǒmen shénme shíhou kāihuì?","Khi nào chúng ta họp?"],["下午两点。","Xiàwǔ liǎng diǎn.","Hai giờ chiều."]]},
+11:{w:[["吃","chī","ăn"],["饭","fàn","cơm"],["米饭","mǐfàn","cơm trắng"],["水","shuǐ","nước"],["想","xiǎng","muốn"],["菜","cài","món ăn"],["咖啡","kāfēi","cà phê"],["要","yào","muốn, cần"]],
+ c:[["吃饭","chī fàn","ăn cơm"],["喝水","hē shuǐ","uống nước"],["想喝咖啡","xiǎng hē kāfēi","muốn uống cà phê"],["中国菜","Zhōngguó cài","món Trung Quốc"],["一杯茶","yì bēi chá","một cốc trà"]],
+ s:[["你想吃什么？","Nǐ xiǎng chī shénme?","Bạn muốn ăn gì?"],["我想吃米饭。","Wǒ xiǎng chī mǐfàn.","Tôi muốn ăn cơm."],["你喝什么？","Nǐ hē shénme?","Bạn uống gì?"],["我要一杯咖啡。","Wǒ yào yì bēi kāfēi.","Tôi lấy một cốc cà phê."]],
+ d:[["中午你想吃什么？","Zhōngwǔ nǐ xiǎng chī shénme?","Trưa nay chị muốn ăn gì?"],["我想吃中国菜。","Wǒ xiǎng chī Zhōngguó cài.","Tôi muốn ăn món Trung Quốc."],["喝什么？茶还是咖啡？","Hē shénme? Chá háishi kāfēi?","Uống gì? Trà hay cà phê?"],["喝茶吧，谢谢。","Hē chá ba, xièxie.","Uống trà đi, cảm ơn."]]},
+12:{w:[["买","mǎi","mua"],["钱","qián","tiền"],["多少","duōshao","bao nhiêu"],["块","kuài","đồng (tệ)"],["这","zhè","này"],["那","nà","kia"],["贵","guì","đắt"],["东西","dōngxi","đồ vật"]],
+ c:[["多少钱","duōshao qián","bao nhiêu tiền"],["买东西","mǎi dōngxi","mua đồ"],["太贵了","tài guì le","đắt quá"],["这个","zhège","cái này"],["十块钱","shí kuài qián","mười tệ"]],
+ s:[["这个多少钱？","Zhège duōshao qián?","Cái này bao nhiêu tiền?"],["二十块。","Èrshí kuài.","Hai mươi tệ."],["太贵了！","Tài guì le!","Đắt quá!"],["我买这个。","Wǒ mǎi zhège.","Tôi mua cái này."]],
+ d:[["你好，这个多少钱？","Nǐ hǎo, zhège duōshao qián?","Chào anh, cái này bao nhiêu?"],["五十块。","Wǔshí kuài.","Năm mươi tệ."],["太贵了！三十块，可以吗？","Tài guì le! Sānshí kuài, kěyǐ ma?","Đắt quá! Ba mươi tệ được không?"],["四十块吧。","Sìshí kuài ba.","Bốn mươi tệ nhé."],["好，我买两个。","Hǎo, wǒ mǎi liǎng ge.","Được, tôi mua hai cái."]]},
+13:{w:[["什么","shénme","gì"],["书","shū","sách"],["桌子","zhuōzi","cái bàn"],["椅子","yǐzi","cái ghế"],["杯子","bēizi","cái cốc"],["电脑","diànnǎo","máy tính"],["手机","shǒujī","điện thoại"],["的","de","của"]],
+ c:[["这是什么","zhè shì shénme","đây là gì"],["我的手机","wǒ de shǒujī","điện thoại của tôi"],["一本书","yì běn shū","một quyển sách"],["谁的","shéi de","của ai"],["那个杯子","nàge bēizi","cái cốc kia"]],
+ s:[["这是什么？","Zhè shì shénme?","Đây là cái gì?"],["这是我的电脑。","Zhè shì wǒ de diànnǎo.","Đây là máy tính của tôi."],["那是谁的书？","Nà shì shéi de shū?","Kia là sách của ai?"],["我的手机在桌子上。","Wǒ de shǒujī zài zhuōzi shang.","Điện thoại của tôi ở trên bàn."]],
+ d:[["这是什么？","Zhè shì shénme?","Cái này là gì?"],["这是中文书。","Zhè shì Zhōngwén shū.","Đây là sách tiếng Trung."],["是你的吗？","Shì nǐ de ma?","Của chị à?"],["不是，是我老师的。","Bú shì, shì wǒ lǎoshī de.","Không, của thầy tôi."]]},
+14:{w:[["哪儿","nǎr","ở đâu"],["这儿","zhèr","ở đây"],["那儿","nàr","ở kia"],["在","zài","ở"],["医院","yīyuàn","bệnh viện"],["商店","shāngdiàn","cửa hàng"],["饭店","fàndiàn","nhà hàng, khách sạn"],["前面","qiánmiàn","phía trước"]],
+ c:[["在哪儿","zài nǎr","ở đâu"],["在这儿","zài zhèr","ở đây"],["去商店","qù shāngdiàn","đi cửa hàng"],["在前面","zài qiánmiàn","ở phía trước"],["我家后面","wǒ jiā hòumiàn","sau nhà tôi"]],
+ s:[["洗手间在哪儿？","Xǐshǒujiān zài nǎr?","Nhà vệ sinh ở đâu?"],["在前面。","Zài qiánmiàn.","Ở phía trước."],["你去哪儿？","Nǐ qù nǎr?","Bạn đi đâu?"],["我去商店买东西。","Wǒ qù shāngdiàn mǎi dōngxi.","Tôi đi cửa hàng mua đồ."]],
+ d:[["请问，饭店在哪儿？","Qǐngwèn, fàndiàn zài nǎr?","Xin hỏi, khách sạn ở đâu?"],["在医院后面。","Zài yīyuàn hòumiàn.","Ở sau bệnh viện."],["远吗？","Yuǎn ma?","Có xa không?"],["不远，就在前面。","Bù yuǎn, jiù zài qiánmiàn.","Không xa, ngay phía trước."],["谢谢！","Xièxie!","Cảm ơn!"]]},
+15:{w:[["天气","tiānqì","thời tiết"],["怎么样","zěnmeyàng","thế nào"],["热","rè","nóng"],["冷","lěng","lạnh"],["下雨","xià yǔ","mưa"],["太","tài","quá"],["很","hěn","rất"],["明天","míngtiān","ngày mai"]],
+ c:[["天气怎么样","tiānqì zěnmeyàng","thời tiết thế nào"],["很热","hěn rè","rất nóng"],["太冷了","tài lěng le","lạnh quá"],["会下雨","huì xià yǔ","sẽ mưa"],["今天天气","jīntiān tiānqì","thời tiết hôm nay"]],
+ s:[["今天天气怎么样？","Jīntiān tiānqì zěnmeyàng?","Hôm nay thời tiết thế nào?"],["今天很热。","Jīntiān hěn rè.","Hôm nay rất nóng."],["明天会下雨。","Míngtiān huì xià yǔ.","Ngày mai sẽ mưa."],["北京太冷了！","Běijīng tài lěng le!","Bắc Kinh lạnh quá!"]],
+ d:[["北京天气怎么样？","Běijīng tiānqì zěnmeyàng?","Thời tiết Bắc Kinh thế nào?"],["很冷，今天零度。","Hěn lěng, jīntiān líng dù.","Rất lạnh, hôm nay 0 độ."],["胡志明市很热，三十五度。","Húzhìmíng Shì hěn rè, sānshíwǔ dù.","TP HCM rất nóng, 35 độ."],["太热了！","Tài rè le!","Nóng quá!"]]},
+16:{w:[["会","huì","biết (làm)"],["说","shuō","nói"],["汉语","Hànyǔ","tiếng Hán"],["写","xiě","viết"],["字","zì","chữ"],["开车","kāichē","lái xe"],["一点儿","yìdiǎnr","một chút"],["怎么","zěnme","thế nào, sao"]],
+ c:[["会说汉语","huì shuō Hànyǔ","biết nói tiếng Trung"],["写汉字","xiě Hànzì","viết chữ Hán"],["会一点儿","huì yìdiǎnr","biết một chút"],["怎么写","zěnme xiě","viết thế nào"],["会开车","huì kāichē","biết lái xe"]],
+ s:[["你会说汉语吗？","Nǐ huì shuō Hànyǔ ma?","Bạn biết nói tiếng Trung không?"],["我会说一点儿。","Wǒ huì shuō yìdiǎnr.","Tôi biết nói một chút."],["这个字怎么写？","Zhège zì zěnme xiě?","Chữ này viết thế nào?"],["她会开车。","Tā huì kāichē.","Cô ấy biết lái xe."]],
+ d:[["你会说汉语吗？","Nǐ huì shuō Hànyǔ ma?","Chị biết nói tiếng Trung không?"],["会一点儿，我在学习。","Huì yìdiǎnr, wǒ zài xuéxí.","Biết một chút, tôi đang học."],["你说得很好！","Nǐ shuō de hěn hǎo!","Chị nói hay lắm!"],["谢谢！你会说越南语吗？","Xièxie! Nǐ huì shuō Yuènányǔ ma?","Cảm ơn! Anh biết nói tiếng Việt không?"],["不会。","Bú huì.","Không biết."]]},
+17:{w:[["能","néng","có thể"],["可以","kěyǐ","được, có thể"],["坐","zuò","ngồi"],["请","qǐng","xin, mời"],["进","jìn","vào"],["这儿","zhèr","chỗ này"],["问","wèn","hỏi"],["看","kàn","xem"]],
+ c:[["请坐","qǐng zuò","mời ngồi"],["请进","qǐng jìn","mời vào"],["可以吗","kěyǐ ma","được không"],["坐这儿","zuò zhèr","ngồi đây"],["请问","qǐngwèn","xin hỏi"]],
+ s:[["我能坐这儿吗？","Wǒ néng zuò zhèr ma?","Tôi ngồi đây được không?"],["可以，请坐。","Kěyǐ, qǐng zuò.","Được, mời ngồi."],["我可以看看吗？","Wǒ kěyǐ kànkan ma?","Tôi xem thử được không?"],["请进！","Qǐng jìn!","Mời vào!"]],
+ d:[["你好，我能坐这儿吗？","Nǐ hǎo, wǒ néng zuò zhèr ma?","Chào anh, tôi ngồi đây được không?"],["可以，请坐。","Kěyǐ, qǐng zuò.","Được, mời ngồi."],["我可以看看你的书吗？","Wǒ kěyǐ kànkan nǐ de shū ma?","Tôi xem thử sách của anh được không?"],["当然可以。","Dāngrán kěyǐ.","Tất nhiên được."]]},
+18:{w:[["打电话","dǎ diànhuà","gọi điện"],["电话","diànhuà","điện thoại"],["号码","hàomǎ","số"],["喂","wéi","alô"],["在","zài","có mặt"],["给","gěi","cho"],["等","děng","đợi"],["一下","yíxià","một chút"]],
+ c:[["打电话","dǎ diànhuà","gọi điện"],["电话号码","diànhuà hàomǎ","số điện thoại"],["给我打电话","gěi wǒ dǎ diànhuà","gọi cho tôi"],["等一下","děng yíxià","đợi một chút"],["他在吗","tā zài ma","anh ấy có đó không"]],
+ s:[["喂，你好！","Wéi, nǐ hǎo!","Alô, xin chào!"],["你的电话号码是多少？","Nǐ de diànhuà hàomǎ shì duōshao?","Số điện thoại của bạn là bao nhiêu?"],["王经理在吗？","Wáng jīnglǐ zài ma?","Giám đốc Vương có đó không?"],["请等一下。","Qǐng děng yíxià.","Xin đợi một chút."]],
+ d:[["喂，王经理在吗？","Wéi, Wáng jīnglǐ zài ma?","Alô, giám đốc Vương có đó không?"],["他不在。你是哪位？","Tā bú zài. Nǐ shì nǎ wèi?","Anh ấy không có ở đây. Chị là ai ạ?"],["我是阿丽。请他给我打电话。","Wǒ shì Ā Lì. Qǐng tā gěi wǒ dǎ diànhuà.","Tôi là A Lệ. Nhờ anh ấy gọi lại cho tôi."],["好的，你的电话是多少？","Hǎo de, nǐ de diànhuà shì duōshao?","Vâng, số của chị là bao nhiêu?"]]},
+19:{w:[["坐","zuò","đi (xe), ngồi"],["出租车","chūzūchē","taxi"],["飞机","fēijī","máy bay"],["火车","huǒchē","tàu hoả"],["去","qù","đi"],["来","lái","đến"],["怎么","zěnme","bằng cách nào"],["开车","kāichē","lái xe"]],
+ c:[["坐飞机","zuò fēijī","đi máy bay"],["坐出租车","zuò chūzūchē","đi taxi"],["怎么去","zěnme qù","đi bằng gì"],["开车去","kāichē qù","lái xe đi"],["坐火车来","zuò huǒchē lái","đến bằng tàu"]],
+ s:[["你怎么去北京？","Nǐ zěnme qù Běijīng?","Bạn đi Bắc Kinh bằng gì?"],["我坐飞机去。","Wǒ zuò fēijī qù.","Tôi đi máy bay."],["我们坐出租车吧。","Wǒmen zuò chūzūchē ba.","Chúng ta đi taxi nhé."],["他是坐火车来的。","Tā shì zuò huǒchē lái de.","Anh ấy đến bằng tàu hoả."]],
+ d:[["你怎么来的？","Nǐ zěnme lái de?","Chị đến bằng gì?"],["我是坐飞机来的。","Wǒ shì zuò fēijī lái de.","Tôi đi máy bay đến."],["明天我们怎么去公司？","Míngtiān wǒmen zěnme qù gōngsī?","Mai mình đến công ty bằng gì?"],["坐出租车吧。","Zuò chūzūchē ba.","Đi taxi nhé."]]},
+20:{w:[["喜欢","xǐhuan","thích"],["看","kàn","xem"],["电影","diànyǐng","phim"],["听","tīng","nghe"],["音乐","yīnyuè","âm nhạc"],["唱歌","chànggē","hát"],["跑步","pǎobù","chạy bộ"],["爱","ài","yêu"]],
+ c:[["看电影","kàn diànyǐng","xem phim"],["听音乐","tīng yīnyuè","nghe nhạc"],["喜欢唱歌","xǐhuan chànggē","thích hát"],["很喜欢","hěn xǐhuan","rất thích"],["不喜欢","bù xǐhuan","không thích"]],
+ s:[["你喜欢做什么？","Nǐ xǐhuan zuò shénme?","Bạn thích làm gì?"],["我喜欢看电影。","Wǒ xǐhuan kàn diànyǐng.","Tôi thích xem phim."],["她很喜欢唱歌。","Tā hěn xǐhuan chànggē.","Cô ấy rất thích hát."],["我不喜欢跑步。","Wǒ bù xǐhuan pǎobù.","Tôi không thích chạy bộ."]],
+ d:[["周末你喜欢做什么？","Zhōumò nǐ xǐhuan zuò shénme?","Cuối tuần chị thích làm gì?"],["我喜欢听音乐，看电影。你呢？","Wǒ xǐhuan tīng yīnyuè, kàn diànyǐng. Nǐ ne?","Tôi thích nghe nhạc, xem phim. Còn anh?"],["我喜欢跑步。","Wǒ xǐhuan pǎobù.","Tôi thích chạy bộ."],["明天我们一起去看电影吧！","Míngtiān wǒmen yìqǐ qù kàn diànyǐng ba!","Mai mình cùng đi xem phim nhé!"]]}
+};
+let tpCur=null;
+function tpProg(){try{return JSON.parse(localStorage.getItem("tp_v1")||"{}");}catch(e){return {};}}
+function tpSave(x){try{localStorage.setItem("tp_v1",JSON.stringify(x));}catch(e){}}
+function tpLine(x,tag){return `<div class="p90-s"><div>${tag?`<b class="tp-tag">${tag}</b> `:""}<b class="p90-hz2">${x[0]}</b><br>${x[1]}<br><small>${x[2]}</small></div><button class="speak-btn" data-say="${x[0]}">🔊</button><button class="speak-btn slow" data-say="${x[0]}" data-slow="1">🐢</button></div>`;}
+function renderTopics(){
+  const v=document.getElementById("topicView");if(!v)return;const P=tpProg();
+  if(tpCur&&TP_DATA[tpCur]){const T=TP_DATA[tpCur];
+    v.innerHTML=`<div class="p90-nav"><button id="tpBack">◀</button><div><b>Chủ đề ${tpCur}: ${TP_NAMES[tpCur-1]}</b><br><small>${TP_LV[Math.floor((tpCur-1)/20)]}</small></div><button id="tpNext" ${TP_DATA[tpCur+1]?"":"disabled"}>▶</button></div>
+    <div class="p90-card"><h4>① Chữ</h4>${T.w.map(w=>`<div class="p90-w"><span class="p90-hz">${w[0]}</span><span>${w[1]}<br><span class="p90-syl">${p90SylHtml(w[1])}</span><br><small>${w[2]}</small></span><button class="speak-btn" data-say="${w[0]}">🔊</button></div>`).join("")}</div>
+    <div class="p90-card"><h4>② Cụm từ</h4>${T.c.map(c=>tpLine(c)).join("")}</div>
+    <div class="p90-card"><h4>③ Câu mẫu</h4>${T.s.map(s=>tpLine(s)).join("")}</div>
+    <div class="p90-card"><h4>④ Đàm thoại</h4>${T.d.map((x,k)=>tpLine(x,k%2?"B":"A")).join("")}<div class="p90-row"><button class="p90-btn" id="tpAll">▶ Nghe cả đoạn</button></div></div>
+    <div class="p90-card" id="tpExCard"><h4>🏋️ Bài tập chủ đề</h4><div class="p90-row">
+      <button class="p90-btn main" data-tpx="chu">① Chữ</button><button class="p90-btn main" data-tpx="cum">② Cụm từ</button><button class="p90-btn main" data-tpx="cau">③ Câu</button><button class="p90-btn main" data-tpx="dt">④ Đàm thoại</button><button class="p90-btn" data-tpx="noi">🎤 Nói</button></div>
+      <p><small>Đã xong: ${(P[tpCur]||[]).join(", ")||"chưa có"}</small></p><div id="tpExBox"></div></div>`;
+    document.getElementById("tpBack").onclick=()=>{tpCur=null;renderTopics();};
+    document.getElementById("tpNext").onclick=()=>{tpCur++;renderTopics();window.scrollTo(0,0);};
+    let playing=false;document.getElementById("tpAll").onclick=e=>{if(playing){playing=false;speechSynthesis.cancel();e.target.textContent="▶ Nghe cả đoạn";return;}playing=true;e.target.textContent="⏹ Dừng";let k=0;const go=()=>{if(!playing||k>=T.d.length){playing=false;e.target.textContent="▶ Nghe cả đoạn";return;}const u=new SpeechSynthesisUtterance(T.d[k++][0]);u.lang="zh-CN";u.rate=0.7;u.onend=()=>setTimeout(go,500);speechSynthesis.speak(u);};go();};
+    v.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>speak(b.dataset.say,b.dataset.slow?0.4:0.7));
+    v.querySelectorAll("[data-tpx]").forEach(b=>b.onclick=()=>tpRun(tpCur,b.dataset.tpx));
+    return;}
+  v.innerHTML=`<div class="p90-head"><b>💬 Đàm thoại theo chủ đề</b><br><small>100 chủ đề, 5 cấp. Mỗi chủ đề: Chữ → Cụm từ → Câu mẫu → Đàm thoại, kèm bài tập từng phần.</small></div>`+
+   TP_LV.map((L,i)=>`<div class="p90-card"><h4>${L}</h4><div class="tp-grid">${TP_NAMES.slice(i*20,i*20+20).map((n,k)=>{const id=i*20+k+1,has=!!TP_DATA[id],d=(P[id]||[]).length;return `<button class="tp-b ${has?"":"lock"} ${d>=4?"full":d?"half":""}" data-tp="${id}" ${has?"":"disabled"}><b>${id}</b> ${n}${has?"":" 🔒"}</button>`;}).join("")}</div>${i?`<p><small>🔒 Đang soạn nội dung, sẽ mở sau khi sếp duyệt cấp 1.</small></p>`:""}</div>`).join("")+
+   `<p class="note"><small>Nội dung em tự soạn theo từ HSK 1, chưa có giáo viên kiểm duyệt.</small></p>`;
+  v.querySelectorAll("[data-tp]").forEach(b=>b.onclick=()=>{tpCur=+b.dataset.tp;renderTopics();window.scrollTo(0,0);});
+}
+/* Bài tập chủ đề: dùng chung bộ máy thử thách p90Choice */
+function tpItems(id,kind){
+  const T=TP_DATA[id];const all=[];for(const k in TP_DATA)all.push(TP_DATA[k]);
+  const poolW=all.flatMap(x=>x.w),poolC=all.flatMap(x=>x.c),poolS=all.flatMap(x=>[...x.s,...x.d]);
+  const pick=(a,n)=>p90Shuffle(a).slice(0,n);
+  const dis=(q,pool,key)=>pick(pool.filter(w=>w[0]!==q[0]&&w[key]!==q[key]),3);
+  const mk=(t,x,pool,key,o)=>({type:"choice",t,ans:x,opts:p90Shuffle([x,...dis(x,pool,key)]),...o});
+  const segOf=s=>{const h=s.replace(/[^一-鿿]/g,"");const dict=[...poolW,...poolC].map(w=>w[0]).filter(w=>w.length>1).sort((a,b)=>b.length-a.length);const out=[];let i=0;while(i<h.length){const w=dict.find(d=>h.startsWith(d,i)&&d.length<h.length-i+1&&d!==h);if(w){out.push(w);i+=w.length;}else{out.push(h[i]);i++;}}return out;};
+  const build=(x,listen)=>{const seg=segOf(x[0]);if(seg.length<2)return null;const pyOf=c=>{const f=[...poolW,...poolC].find(w=>w[0]===c);return f?f[1]:"";};const tiles=seg.map(s=>[s,pyOf(s)]);const extra=pick(poolW.filter(w=>!seg.includes(w[0])),2).map(w=>[w[0],w[1]]);
+    return {type:"build",t:listen?"Nghe và xếp lại câu":"Dịch sang tiếng Trung",say:x[0],vi:x[2],py:x[1],ans:seg,tiles:p90Shuffle([...tiles,...extra]),listen};};
+  const it=[];
+  if(kind==="chu"){T.w.forEach((w,k)=>it.push(k%3===0?mk("Nghe và chọn CHỮ đúng",w,poolW,0,{say:w[0],lab:o=>p90Tri(o)}):k%3===1?mk("Chữ này nghĩa là gì?",w,poolW,2,{big:w[0],py:w[1],lab:o=>o[2]}):mk("Nghĩa này là chữ nào?",w,poolW,0,{big:w[2],sm:1,lab:o=>`<span class="p90-hz2">${o[0]}</span><br><small>${o[1]}</small>`})));
+    it.push({type:"match",t:"Ghép chữ với nghĩa",pairs:pick(T.w,5)});it.push({type:"match",t:"Nghe rồi ghép với chữ",audio:true,pairs:pick(T.w,5)});
+    pick(T.w,4).forEach(w=>it.push(mk("Nghe và chọn NGHĨA đúng",w,poolW,2,{say:w[0],lab:o=>o[2]})));}
+  if(kind==="cum"){T.c.forEach((c,k)=>{it.push(mk("Cụm từ này nghĩa là gì?",c,poolC,2,{big:c[0],py:c[1],sm:1,lab:o=>o[2]}));it.push(mk(k%2?"Nghe và chọn CỤM TỪ đúng":"Nghĩa này là cụm từ nào?",c,poolC,0,k%2?{say:c[0],lab:o=>p90Tri(o)}:{big:c[2],sm:1,lab:o=>`<span class="p90-hz2">${o[0]}</span><br><small>${o[1]}</small>`}));const b=build(c,k%2===0);if(b)it.push(b);});
+    it.push({type:"match",t:"Ghép cụm từ với nghĩa",pairs:pick(T.c,5)});}
+  if(kind==="cau"){T.s.forEach((s,k)=>{it.push(mk("Đọc câu, chọn nghĩa",s,poolS,2,{big:s[0],py:s[1],sm:1,lab:o=>o[2]}));it.push(mk("Nghe câu, chọn câu đúng",s,poolS,0,{say:s[0],lab:o=>`<span>${o[0]}</span><br><small>${o[1]}</small>`}));const b=build(s,k%2===1);if(b)it.push(b);
+      const seg=segOf(s[0]);if(seg.length>=2){const w=seg[Math.floor(Math.random()*seg.length)];const f=[...poolW,...poolC].find(x=>x[0]===w)||[w,"",""];const opts=[f,...pick([...poolW].filter(x=>x[0]!==w&&x[0].length===w.length),3)];
+        it.push({type:"choice",t:"Điền vào chỗ trống",big:s[0].replace(w,"＿＿"),sm:1,py:s[2],ans:f,opts:p90Shuffle(opts),lab:o=>p90Tri(o),fb:`<b>${s[0]}</b> ${s[1]}`});}});}
+  if(kind==="dt"){for(let k=0;k+1<T.d.length;k++){const A=T.d[k],B=T.d[k+1];const opts=p90Shuffle([B,...pick(poolS.filter(x=>x!==B&&x!==A),2)]);
+      it.push({type:"choice",t:"Chọn câu đáp lại phù hợp",big:"A: "+A[0],sm:1,py:A[1],ans:B,opts,lab:o=>`<span>${o[0]}</span><br><small>${o[1]}</small>`,fb:`<b>${B[0]}</b> — ${B[2]}`});}
+    T.d.forEach((x,k)=>{it.push(mk("Nghe câu trong đàm thoại, chọn nghĩa",x,poolS,2,{say:x[0],lab:o=>o[2]}));const b=build(x,k%2===0);if(b)it.push(b);});}
+  const head=it.slice(0,2);return [...head,...p90Shuffle(it.slice(2))];
+}
+function tpRun(id,kind){
+  const done=()=>{const P=tpProg();P[id]=[...new Set([...(P[id]||[]),{chu:"Chữ",cum:"Cụm từ",cau:"Câu",dt:"Đàm thoại",noi:"Nói"}[kind]])];tpSave(P);};
+  const T=TP_DATA[id];
+  if(kind==="noi"){p90Speak(null,-1,{box:"tpExBox",items:[...T.s,...T.d,...T.c].slice(0,10),done});return;}
+  p90Choice(null,-1,"doc",{box:"tpExBox",make:()=>tpItems(id,kind),done});document.getElementById("tpExBox").scrollIntoView({behavior:"smooth"});
+}
+
+renderTopics();
 </script>
 
 </body>
